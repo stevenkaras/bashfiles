@@ -1,13 +1,15 @@
 
-## set up chdir hook ##
-#######################
+# Change directory hook
+#
+# When the directory is changed, this function will run the CHDIR_COMMAND environment variable
+# You should assume that whatever is already in this command is fully delimited, including semicolons
 function on_chdir() {
     if [ "$PWD" != "$ONCHDIR_OLDPWD" ]; then
         ONCHDIR_OLDPWD="$PWD"
         $CHDIR_COMMAND
     fi
 }
-PROMPT_COMMAND="${PROMPT_COMMAND}on_chdir;"
+PROMPT_COMMAND="on_chdir;${PROMPT_COMMAND}"
 
 function set_tab_title() {
     case $TERM in
