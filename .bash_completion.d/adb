@@ -10,7 +10,7 @@ __adb_completion() {
         install)
             ;;
         uninstall)
-            words=$(adb shell pm list packages -3 | cut -d ":" -f 2 | tr -d '\r' | tr '\n' ' ')
+            words=$(cache_command ~/.adb_packages~ "adb shell pm list packages -3 | cut -d ":" -f 2 | tr -d '\r' | tr '\n' ' '")
             ;;
         shell)
             ;;
