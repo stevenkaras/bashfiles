@@ -11,7 +11,10 @@ function on_chdir() {
 }
 PROMPT_COMMAND="on_chdir;${PROMPT_COMMAND}"
 
-function set_tab_title() {
+# Makes a best effort to set the title for the current terminal container
+#
+# This could be a window, tab, etc.
+function set_title() {
     case $TERM in
     xterm)
         echo -ne "\033]0;$1\a"
@@ -19,11 +22,6 @@ function set_tab_title() {
     *)
         ;;
     esac
-
-    # local project_name=$(__project_name)
-    # if [[ -n "$project_name" ]]; then
-    #     echo -ne "\033]0;$(__project_name)\a"
-    # fi
 }
 
 # expands the path of the given parameter
