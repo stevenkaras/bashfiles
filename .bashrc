@@ -52,7 +52,7 @@ done
 PS1="\[\e[33m\]"
 
 # add the project ps1
-PS1="${PS1}\$(__project_ps1)"
+PS1="${PS1}\$(project_ps1)"
 
 # add git to the prompt
 GIT_PS1_SHOWDIRTYSTATE=true
@@ -68,28 +68,9 @@ PS1="${PS1}\[\e[91m\]\$(__git_ps1 ' (%s) ')"
 
 export PS1="${PS1}\[\e[33m\]\$ \[\e[m\]"
 
-# set up the terminal title #
-#############################
-
-function __project_update_name() {
-	PROJECT_NAME=$(__project_name)
-	PROJECT_PATH=$(__project_path)
+# Change the terminal title when switching directories #
+########################################################
+function project_set_title() {
+	set_title $PROJECT_NAME
 }
-
-if [ -f ~/project-prompt.bash ]; then
-	function __tab_title() {
-		local project_name=$(__project_name)
-		if [[ -n "$project_name" ]]; then
-			echo -ne "\033]0;$(__project_name)\a"
-		fi
-	}
-	# on_chdir() {
-	# 	if [ "$PWD" != "$ONCHDIR_OLDPWD" ]; then
-	# 		ONCHDIR_OLDPWD="$PWD";
-	# 		$CHDIR_COMMAND
-	# 	fi
-	# }
-
-	# export PROMPT_COMMAND=on_chdir
-	PROMPT_COMMAND="${PROMPT_COMMAND}__tab_title;"
-fi
+CHDIR_COMMAND="${CHDIR_COMMAND}project_set_title;"
