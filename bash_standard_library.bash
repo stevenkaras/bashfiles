@@ -56,3 +56,21 @@ function expand_args {
     done
     echo $ARGS
 }
+
+# Provide a completion command, caching the result for 10 seconds
+#
+# Parameters:
+#  1 - the path to the cache file
+#  2 - the command to generate the words for the cache
+function cache_command() {
+    local gen_cache=
+    if [[ ! -r "$1" ]]; then
+        gen_cache=true
+    elif (($(date +%s) - $(stat -c%Y "$1") > 10)); then
+        gen_cache=true
+    fi
+    if [[ $gen_cache ]]; then
+        eval $2 > "$1"
+    fi
+    echo $(cat "$1")
+}
