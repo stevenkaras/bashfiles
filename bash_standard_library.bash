@@ -6,7 +6,7 @@
 function on_chdir() {
     if [ "$PWD" != "$ONCHDIR_OLDPWD" ]; then
         ONCHDIR_OLDPWD="$PWD"
-        $CHDIR_COMMAND
+        eval $CHDIR_COMMAND
     fi
 }
 PROMPT_COMMAND="on_chdir;${PROMPT_COMMAND}"
