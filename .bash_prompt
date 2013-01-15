@@ -1,13 +1,18 @@
 #!/bin/bash
 
+## include all the prompt libraries ##
+######################################
+for prompt_lib in `ls ~/.bash_prompt.d`; do
+    . ~/.bash_prompt.d/$prompt_lib
+done
+
+## build the actual prompt ##
+#############################
 # set a fancy prompt (non-color, unless we know we "want" color)
 case "$TERM" in
     xterm-color) color_prompt=yes;;
 esac
 
-# uncomment for a colored prompt, if the terminal has the capability; turned
-# off by default to not distract the user: the focus in a terminal window
-# should be on the output of commands, not on the prompt
 force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
@@ -21,13 +26,7 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
-## include all the prompt libraries ##
-######################################
-for prompt_lib in `ls ~/.bash_prompt.d`; do
-    . ~/.bash_prompt.d/$prompt_lib
-done
-
-# set up the prompt itself
+#TODO: build a framework for color escapes to handle the color_prompt option
 PS1="\[\e[33m\]"
 
 # add the project ps1
