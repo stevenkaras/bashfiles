@@ -25,10 +25,10 @@ if [ -f ~/.bash_aliases ]; then
 	. ~/.bash_aliases
 fi
 
-## include the bash standard library ##
-#######################################
-if [ -f ~/bash_standard_library.bash ]; then
-	. ~/bash_standard_library
+## include the bash libraries ##
+################################
+for lib in $(ls ~/.bash_lib.d); do
+    . ~/.bash_lib.d
 fi
 
 ## set up bash completion ##
