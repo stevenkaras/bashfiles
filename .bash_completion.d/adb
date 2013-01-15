@@ -1,0 +1,22 @@
+#!/bin/bash
+
+__adb_completion() {
+    local words=""
+    if ((COMP_CWORD == 1)); then
+        # display only commands
+        words="install uninstall shell"
+    else
+        case ${COMP_WORDS[1]} in
+        install)
+            ;;
+        uninstall)
+            words=$(adb shell pm list packages -3 | cut -d ":" -f 2 | tr -d '\r' | tr '\n' ' ')
+            ;;
+        shell)
+            ;;
+        esac
+    fi
+    COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}))
+}
+
+complete -o default -o nospace -F __adb_completion adb

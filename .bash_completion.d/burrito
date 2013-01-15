@@ -1,0 +1,85 @@
+#!/bin/bash
+
+__burrito_completion() {
+    local words=""
+    if ((COMP_CWORD == 1)); then
+        # display only commands
+        words="help apk raw tool inject"
+    else
+        case ${COMP_WORDS[1]} in
+        help)
+            words="help apk raw tool inject"
+            ;;
+        apk)
+            if ((COMP_CWORD == 2)); then
+                # display only commands
+                words="help package sign align"
+            else
+                case ${COMP_WORDS[2]} in
+                help)
+                    words="help package sign align"
+                    ;;
+                package)
+                    if [[ ${COMP_WORDS[COMP_CWORD]:0:1} == "-" ]]; then
+                        words="--keystore -k --key -k --password -p"
+                    fi
+                    ;;
+                sign)
+                    if [[ ${COMP_WORDS[COMP_CWORD]:0:1} == "-" ]]; then
+                        words="--keystore -k --key -k --password -p"
+                    fi
+                    ;;
+                align)
+                    ;;
+                esac
+            fi
+            ;;
+        raw)
+            if ((COMP_CWORD == 2)); then
+                # display only commands
+                words="help repack unpack"
+            else
+                case ${COMP_WORDS[2]} in
+                help)
+                    words="help repack unpack"
+                    ;;
+                repack)
+                    if [[ ${COMP_WORDS[COMP_CWORD]:0:1} == "-" ]]; then
+                        words="--keystore -k --key -k --password -p"
+                    fi
+                    ;;
+                unpack)
+                    ;;
+                esac
+            fi
+            ;;
+        tool)
+            if ((COMP_CWORD == 2)); then
+                # display only commands
+                words="help repack unpack"
+            else
+                case ${COMP_WORDS[2]} in
+                help)
+                    words="help repack unpack"
+                    ;;
+                repack)
+                    if [[ ${COMP_WORDS[COMP_CWORD]:0:1} == "-" ]]; then
+                        words="--keystore -k --key -k --password -p"
+                    fi
+                    ;;
+                unpack)
+                    ;;
+                esac
+            fi
+            ;;
+        inject)
+            if [[ ${COMP_WORDS[COMP_CWORD]:0:1} == "-" ]]; then
+                words="--plan -p --keystore -k --key -k --keypassword -k --rpkgs -r --origin -o --appname -a --nopack -n --ignore_missing_classes -i"
+            fi
+            ;;
+        esac
+    fi
+    COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}))
+}
+
+complete -o default -o nospace -F __burrito_completion burrito

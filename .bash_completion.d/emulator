@@ -1,0 +1,19 @@
+#!/bin/bash
+
+__android_emulator_completion() {
+    local words=""
+    if ((COMP_CWORD == 1)); then
+        # display only commands
+        words="-avd -help"
+    else
+        case ${COMP_WORDS[1]} in
+        -avd)
+            # TODO: improve the performance on this completion, either through caching or unstable APIs
+            words=$(android list avd | grep -E -o "Name: \S+" | cut -d " " -f 2)
+            ;;
+        esac
+    fi
+    COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}))
+}
+
+complete -o default -o nospace -F __android_emulator_completion emulator
