@@ -38,35 +38,6 @@ for prog in `ls ~/.bash_completion.d`; do
 	. ~/.bash_completion.d/$prog
 done
 
-## include all the prompt libraries ##
-######################################
-for prompt_lib in `ls ~/.bash_prompt.d`; do
-	. ~/.bash_prompt.d/$prompt_lib
-done
-
-# set up the prompt itself
-PS1="\[\e[33m\]"
-
-# add the project ps1
-PS1="${PS1}\$(project_ps1)"
-
-# add git to the prompt
-GIT_PS1_SHOWDIRTYSTATE=true
-GIT_PS1_SHOWSTASHSTATE=true
-# GIT_PS1_SHOWUPSTREAM="false"
-GIT_PS1_SHOWUNTRACKEDFILES=true
-PS1="${PS1}\[\e[91m\]\$(__git_ps1 ' (%s) ')"
-
-# add svn to the prompt
-# SVN_PS1_SHOWDIRTYSTATE=
-# SVN_PS1_SHOWREVISION=
-# PS1="${PS1}\[\e[91m\]\$(__svn_ps1 ' (%s) ')"
-
-export PS1="${PS1}\[\e[33m\]\$ \[\e[m\]"
-
-# Change the terminal title when switching directories #
-########################################################
-function project_set_title() {
-	set_title $PROJECT_NAME
-}
-CHDIR_COMMAND="${CHDIR_COMMAND}project_set_title;"
+if [ -f ~/.bash_prompt ]; then
+    . ~/.bash_prompt
+fi
