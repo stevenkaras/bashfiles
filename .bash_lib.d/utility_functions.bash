@@ -1,29 +1,4 @@
 
-# Change directory hook
-#
-# When the directory is changed, this function will run the CHDIR_COMMAND environment variable
-# You should assume that whatever is already in this command is fully delimited, including semicolons
-function on_chdir() {
-    if [ "$PWD" != "$ONCHDIR_OLDPWD" ]; then
-        ONCHDIR_OLDPWD="$PWD"
-        eval $CHDIR_COMMAND
-    fi
-}
-PROMPT_COMMAND="on_chdir;${PROMPT_COMMAND}"
-
-# Makes a best effort to set the title for the current terminal container
-#
-# This could be a window, tab, etc.
-function set_title() {
-    case $TERM in
-    xterm)
-        echo -ne "\033]0;$1\a"
-        ;;
-    *)
-        ;;
-    esac
-}
-
 # expands the path of the given parameter
 function expand_path {
     if [[ -e "$1" ]]; then
@@ -57,9 +32,9 @@ function expand_args {
     echo $ARGS
 }
 
-# Provide a completion command, caching the result for 10 seconds
+# Cache an expensive, volatile command, caching the result for 10 seconds
 #
-# Parameters:
+# Arguments:
 #  1 - the path to the cache file
 #  2 - the command to generate the words for the cache
 function cache_command() {
