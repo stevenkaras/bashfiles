@@ -21,11 +21,6 @@ if [ -f ~/.bash_aliases ]; then
 	. ~/.bash_aliases
 fi
 
-# enable programmable completion features (you don't need to enable
-# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-# sources /etc/bash.bashrc).
-set completion-ignore-case on
-
 ## include the bash standard library ##
 #######################################
 if [ -f ~/bash_standard_library.bash ]; then
@@ -34,6 +29,11 @@ fi
 
 ## set up bash completion ##
 ############################
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+set completion-ignore-case on
+
 for prog in `ls ~/.bash_completion.d`; do
 	. ~/.bash_completion.d/$prog
 done
