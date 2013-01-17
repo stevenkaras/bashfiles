@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
 
@@ -20,14 +22,14 @@ shopt -s checkwinsize
 
 # Alias definitions
 if [ -f ~/.bash_aliases ]; then
-	. ~/.bash_aliases
+  . ~/.bash_aliases
 fi
 
 ## include the bash libraries ##
 ################################
 for lib in $(ls ~/.bash_lib.d); do
-    . ~/.bash_lib.d
-fi
+    . ~/.bash_lib.d/$lib
+done
 
 ## set up bash completion ##
 ############################
@@ -37,7 +39,7 @@ fi
 set completion-ignore-case on
 
 for prog in $(ls ~/.bash_completion.d); do
-	. ~/.bash_completion.d/$prog
+  . ~/.bash_completion.d/$prog
 done
 
 if [ -f ~/.bash_prompt ]; then
