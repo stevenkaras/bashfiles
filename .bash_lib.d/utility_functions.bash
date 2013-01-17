@@ -39,9 +39,15 @@ function expand_args {
 #  2 - the command to generate the words for the cache
 function cache_command() {
     local gen_cache=
+    local stat_options="-c%Y"
+    case $(uname) in
+        Darwin*)
+            stat_options="-f%m"
+            ;;
+    esac
     if [[ ! -r "$1" ]]; then
         gen_cache=true
-    elif (($(date +%s) - $(stat -c%Y "$1") > 10)); then
+    elif (($(date +%s) - $(stat $stat_options "$1") > 10)); then
         gen_cache=true
     fi
     if [[ $gen_cache ]]; then
