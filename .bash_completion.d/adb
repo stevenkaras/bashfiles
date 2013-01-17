@@ -1,27 +1,25 @@
 #!/bin/bash
 
 __adb_completion() {
+    __prepare_completion
     local words=""
-    if ((COMP_CWORD == 1)); then
-        if [[ ${COMP_WORDS[COMP_CWORD]:0:1} == "-" ]]; then
+    case $previous_word in
+    -s)
+        words=$(cache_command ~/.adb_devices~ "adb devices | tail -n +2 | cut -f 1 | tr '\n' ' '")
+        ;;
+    uninstall)
+        words=$(cache_command ~/.adb_packages~ "adb shell pm list packages -3 | cut -d ":" -f 2 | tr -d '\r' | tr '\n' ' '")
+        ;;
+    devices|install|shell) ;;
+    *)
+        if [[ ${current_word:0:1} == "-" ]]; then
             words="-d -e -s"
         else
             # display only commands
             words="devices install uninstall shell"
         fi
-    else
-        case ${COMP_WORDS[1]} in
-        -s)
-            words=$(cache_command ~/.adb_devices~ "adb devices | tail -n +2 | cut -f 1 | tr '\n' ' '")
-            ;;
-        uninstall)
-            words=$(cache_command ~/.adb_packages~ "adb shell pm list packages -3 | cut -d ":" -f 2 | tr -d '\r' | tr '\n' ' '")
-            ;;
-        shell)
-            ;;
-        esac
-    fi
-    COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}))
+    esac
+    COMPREPLY=($(compgen -W "$words" -- $current_word))
 }
 
 complete -o default -o nospace -F __adb_completion adb
