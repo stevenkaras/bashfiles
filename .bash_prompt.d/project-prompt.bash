@@ -32,22 +32,22 @@ function project_path() {
 
 # determine the project name
 function project_name() {
-  local project_root=$(project_root)
+  local project_root="$(project_root)"
   if [ -d "$project_root" ]; then
-    echo $(basename $project_root)
+    echo $(basename "$project_root")
   fi
 }
 
 function project_ps1() {
-  local project_name=$(project_name)
+  local project_name="$(project_name)"
   if [ ! -z "$project_name" ]; then
-    local project_path=$(project_path)
+    local project_path="$(project_path)"
     echo "[${project_name}]${project_path}"
   else
     if [ "$PWD" = "$HOME" ]; then
       echo "~"
     else
-      echo "$(basename $PWD)"
+      echo "$(basename "$PWD")"
     fi
   fi
 }
