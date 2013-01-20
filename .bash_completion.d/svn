@@ -1,0 +1,29 @@
+#!/bin/bash
+
+__svn_completion() {
+    __prepare_completion
+    local words=""
+    case $previous_word in
+    blame|checkout|commit) ;;
+    cat|changelist|cleanup|export|import) ;;
+    info|list|lock|log|merge|unlock) ;;
+    mergeinfo|propdel|propedit|propget|proplist|propset);;
+    resolve|resolved|revert|status|switch|update) ;;
+    rename|ren|add|copy|delete|move|mkdir) ;;
+    cl|co|ci|cp|del|remove|rm|di|ls|h|mv) ;;
+    pdel|pd|pedit|pe|pget|pg|plist|pl|pset|ps|stat|st|sw|up) ;;
+    *)
+        if [[ ${current_word:0:1} == "-" ]]; then
+            words="-r"
+        else
+            # display only commands
+            words="add blame cat changelist checkout cleanup commit copy delete diff export help import info list lock log merge"
+            words="$words mergeinfo mkdir move propdel propedit propget proplist propset resolve resolved revert status switch unlock update"
+            words="$words praise annotate ann"
+            words="$words cl co ci cp del remove rm di ls h mv rename ren pdel pd pedit pe pget pg plist pl pset ps stat st sw up"
+        fi
+    esac
+    COMPREPLY=($(compgen -W "$words" -- $current_word))
+}
+
+complete -o default -o nospace -F __svn_completion svn
