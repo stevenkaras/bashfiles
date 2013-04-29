@@ -21,3 +21,7 @@ alias sa='. ~/.bash_aliases'
 # some git aliases
 alias gitk='gitk 2>/dev/null &'
 alias gitgui='git gui &'
+function loc() {
+    echo "   lines   words   chars filename"
+    wc `find . -type f -name $1 | tr '\n' ' '`
+}
