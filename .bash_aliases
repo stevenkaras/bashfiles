@@ -11,6 +11,10 @@ alias ll='ls -AhlF'
 alias la='ls -AF'
 alias l='ls -CF'
 
+alias fucking='sudo'
+alias va='vi ~/.bash_aliases'
+alias sa='. ~/.bash_aliases'
+
 ## version control ##
 #####################
 

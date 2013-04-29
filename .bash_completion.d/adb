@@ -2,6 +2,7 @@
 
 __adb_completion() {
     __prepare_completion
+
     local words=""
     case $previous_word in
     -s)
