@@ -7,6 +7,7 @@
 *.o
 *.so
 *.dylib
+*.gem
 
 # Packages #
 ############
@@ -38,3 +39,5 @@ Thumbs.db
 # Temporary files #
 ###################
 *~
+.sonar/
+.yardoc/
