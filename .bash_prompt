@@ -8,24 +8,27 @@ done
 
 ## build the actual prompt ##
 #############################
-PS1="\[\e[33m\]"
-
-# add the project ps1
-PS1="${PS1}\$(project_ps1)"
+PROMPT_CHUNK_SIMPLE="\[\e[33m\]\$(project_ps1)"
 
 # add git to the prompt
-GIT_PS1_SHOWDIRTYSTATE=true
-GIT_PS1_SHOWSTASHSTATE=true
+export GIT_PS1_SHOWDIRTYSTATE=true
+export GIT_PS1_SHOWSTASHSTATE=true
 # GIT_PS1_SHOWUPSTREAM="false"
-GIT_PS1_SHOWUNTRACKEDFILES=true
-PS1="${PS1}\[\e[91m\]\$(__git_ps1 ' (%s) ')"
+export GIT_PS1_SHOWUNTRACKEDFILES=true
+PROMPT_CHUNK_GIT="\[\e[91m\]\$(__git_ps1 ' (%s) ')"
 
 # add svn to the prompt
 # SVN_PS1_SHOWDIRTYSTATE=
 # SVN_PS1_SHOWREVISION=
 # PS1="${PS1}\[\e[91m\]\$(__svn_ps1 ' (%s) ')"
 
-export PS1="${PS1}\[\e[33m\]\$ \[\e[m\]"
+export PS1="$PROMPT_CHUNK_SIMPLE$PROMPT_CHUNK_GIT\[\e[33m\]\$ \[\e[m\]"
+
+# helper function to fallback on a simpler prompt for problematic situations #
+##############################################################################
+function fallback_prompt() {
+	export PS1="$PROMPT_CHUNK_SIMPLE\[\e[33m\]\$ \[\e[m\]"
+}
 
 # Change the terminal title when switching directories #
 ########################################################
