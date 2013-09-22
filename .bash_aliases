@@ -29,3 +29,21 @@ function gitstat() {
 	git log --author=$1 --pretty=tformat: --numstat | awk '{ adds += $1; subs += $2; loc += $1 - $2 } END { printf "added: %s removed: %s total: %s\n",adds,subs,loc }' -
 }
 
+# Launch explain shell website for a commnad
+function explain {
+  # base url with first command already injected
+  # $ explain tar
+  #   => http://explainshel.com/explain/tar?args=
+  url="http://explainshell.com/explain/$1?args="
+
+  # removes $1 (tar) from arguments ($@)
+  shift;
+
+  # iterates over remaining args and adds builds the rest of the url
+  for i in "$@"; do
+    url=$url"$i""+"
+  done
+
+  # opens url in browser
+  open $url
+}
