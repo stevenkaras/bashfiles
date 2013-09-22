@@ -12,12 +12,13 @@ __adb_completion() {
         words=$(cache_command ~/.adb_packages~ "adb shell pm list packages -3 | cut -d ":" -f 2 | tr -d '\r' | tr '\n' ' '")
         ;;
     devices|install|shell) ;;
+    start-server) ;;
     *)
         if [[ ${current_word:0:1} == "-" ]]; then
             words="-d -e -s"
         else
             # display only commands
-            words="devices install uninstall shell"
+            words="devices install uninstall shell start-server"
         fi
     esac
     COMPREPLY=($(compgen -W "$words" -- $current_word))
