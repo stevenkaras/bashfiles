@@ -13,10 +13,6 @@ alias la='ls -AF'
 alias l.='ls -d .*'
 alias l='ls -CF'
 
-alias fucking='sudo'
-alias va='vi ~/.bash_aliases'
-alias sa='. ~/.bash_aliases'
-
 ## version control ##
 #####################
 
@@ -24,15 +20,21 @@ alias sa='. ~/.bash_aliases'
 function ui_process() {
     (eval $1 2>&1 &) >/dev/null
 }
+
 alias gg='ui_process "git gui"'
 alias gk='ui_process "gitk"'
+
 function loc() {
     echo "   lines   words   chars filename"
     wc `find . -type f -name $1 | tr '\n' ' '`
 }
+
 function gitstat() {
-	git log --author=$1 --pretty=tformat: --numstat | awk '{ adds += $1; subs += $2; loc += $1 - $2 } END { printf "added: %s removed: %s total: %s\n",adds,subs,loc }' -
+    git log --author=$1 --pretty=tformat: --numstat | awk '{ adds += $1; subs += $2; loc += $1 - $2 } END { printf "added: %s removed: %s total: %s\n",adds,subs,loc }' -
 }
+
+## shell commands ##
+####################
 
 # Launch explain shell website for a commnad
 function explain {
@@ -51,4 +53,16 @@ function explain {
 
   # opens url in browser
   open $url
+}
+
+alias fucking='sudo'
+alias va='vi ~/.bash_aliases'
+alias sa='. ~/.bash_aliases'
+
+## Service Development aliases ##
+#################################
+
+function jsoncurl() {
+    curl -H "Accept: application/json" -H "Content-Type: application/json" $@
+    echo
 }
