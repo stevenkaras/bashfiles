@@ -5,10 +5,12 @@
 
 # directory traversal
 alias up='cd ..'
+alias cd..='cd ..'
 
 # directory listing
 alias ll='ls -AhlF'
 alias la='ls -AF'
+alias l.='ls -d .*'
 alias l='ls -CF'
 
 alias fucking='sudo'
