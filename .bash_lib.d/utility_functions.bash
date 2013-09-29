@@ -32,22 +32,23 @@ function expand_args {
     echo $ARGS
 }
 
-# Cache an expensive, volatile command, caching the result for 10 seconds
+# Cache an expensive, volatile command, caching the result for the specified number of seconds
 #
 # Arguments:
 #  1 - the path to the cache file
 #  2 - the command to generate the words for the cache
+#  3 - number of seconds to cache the results for (defaults to 10 seconds)
 function cache_command() {
     local gen_cache=
-    local stat_options="-c%Y"
+    local stat_options=
+    local cache_period=${3:-10}
     case $(uname) in
-        Darwin*)
-            stat_options="-f%m"
-            ;;
+        Darwin*) stat_options="-f%m" ;;
+        *) stat_options="-c%Y" ;;
     esac
     if [[ ! -r "$1" ]]; then
         gen_cache=true
-    elif (($(date +%s) - $(stat $stat_options "$1") > 10)); then
+    elif (($(date +%s) - $(stat $stat_options "$1") > $cache_period)); then
         gen_cache=true
     fi
     if [[ $gen_cache ]]; then
