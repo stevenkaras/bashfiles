@@ -10,7 +10,15 @@ __svn_complete_global_options() {
 }
 
 __svn_completion() {
-    __prepare_completion
+    local current_word=${COMP_WORDS[COMP_CWORD]}
+    local previous_word=${COMP_WORDS[COMP_CWORD-1]}
+    local all_words=("${COMP_WORDS[@]}")
+    local which_word=$COMP_CWORD
+    if [[ $current_word == *"="* ]]; then
+        previous_word=${current_word%=*}
+        current_word=${current_word#*=}
+    fi
+
     local words=""
     case $previous_word in
     checkout|commit) ;;
