@@ -18,7 +18,7 @@ alias l='ls -CF'
 
 # some git aliases
 function ui_process() {
-    (eval $1 2>&1 &) >/dev/null
+    (eval "$@" 2>&1 &) >/dev/null
 }
 
 alias gg='ui_process "git gui"'
@@ -56,8 +56,9 @@ function explain {
 }
 
 alias fucking='sudo'
-alias va='vi ~/.bash_aliases'
+alias va='$EDITOR ~/.bash_aliases'
 alias sa='. ~/.bash_aliases'
+alias h?='history | grep'
 
 ## Service Development aliases ##
 #################################
@@ -66,3 +67,5 @@ function jsoncurl() {
     curl -H "Accept: application/json" -H "Content-Type: application/json" $@
     echo
 }
+
+alias blog_serve='bundle exec jekyll serve --drafts --watch &'
