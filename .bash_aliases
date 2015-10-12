@@ -68,4 +68,4 @@ function jsoncurl() {
     echo
 }
 
-alias blog_serve='bundle exec jekyll serve --drafts --watch &'
+alias blog_serve='bundle exec jekyll serve -D -w --config _config_development.yml &'
