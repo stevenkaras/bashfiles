@@ -1,15 +1,18 @@
 #!/bin/bash
 # Bash completion support for Rake, Ruby Make.
 
-export COMP_WORDBREAKS=${COMP_WORDBREAKS/\:/}
-
 _rakecomplete() {
+  local cur
+  _get_comp_words_by_ref -n : cur
+
   if [ -f Rakefile ]; then
     recent=`ls -t .rake_tasks~ Rakefile *.rake **/*.rake 2> /dev/null | head -n 1`
     if [[ $recent != '.rake_tasks~' ]]; then
       rake -P | grep 'rake' | cut -d " " -f 2 > .rake_tasks~
     fi
-    COMPREPLY=($(compgen -W "`cat .rake_tasks~`" -- ${COMP_WORDS[COMP_CWORD]}))
+    COMPREPLY=($(compgen -W "`cat .rake_tasks~`" -- $cur))
+    __ltrim_colon_completions "$cur"
+
     return 0
   fi
 }
