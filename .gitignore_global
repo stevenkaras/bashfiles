@@ -42,3 +42,4 @@ Thumbs.db
 .sonar/
 .yardoc/
 *.pid
+.ipynb_checkpoints/
