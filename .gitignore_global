@@ -43,3 +43,4 @@ Thumbs.db
 .yardoc/
 *.pid
 .ipynb_checkpoints/
+.bundle/
