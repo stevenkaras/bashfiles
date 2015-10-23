@@ -10,17 +10,17 @@
 
 function cleanup_from_pid_file() {
   # send a SIGINT for a graceful shutdown
-  kill -2 $(cat $1) >/dev/null 2>&1
+  kill -2 $(cat $1) &>/dev/null
   sleep 3
-  kill -0 $(cat $1) >/dev/null 2>&1
+  kill -0 $(cat $1) &>/dev/null
   if [[ $? -eq 1 ]]; then
     rm $1
     exit 0
   fi
   # a bit more insistent this time, send them SIGTERM
-  kill -15 $(cat $1) >/dev/null 2>&1
+  kill -15 $(cat $1) &>/dev/null
   sleep 10
-  kill -0 $(cat $1) >/dev/null 2>&1
+  kill -0 $(cat $1) &>/dev/null
   if [[ $? -eq 1 ]]; then
     rm $1
     exit 0
