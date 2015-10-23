@@ -75,3 +75,4 @@ function jsoncurl() {
 alias blog_serve='bundle exec jekyll serve -D -w --config _config_development.yml &'
 alias prc='RAILS_ENV=production RACK_ENV=production rails c'
 alias myip='curl http://httpbin.org/ip 2>/dev/null | jq -r .origin'
+alias deploy='git push heroku && git push origin && heroku run rake db:migrate && notify deployed'
