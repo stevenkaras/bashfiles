@@ -2,3 +2,5 @@
 function notify() {
     osascript -e "display notification \"$*\" with title \"Terminal\""
 }
+
+alias lstat='stat -L'
