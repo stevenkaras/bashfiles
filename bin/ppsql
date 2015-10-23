@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+if __FILE__ == $PROGRAM_NAME
+  if ARGV.size < 1
+    puts "Usage: #{$PROGRAM_NAME} DATABASE_URL"
+    exit 1
+  end
+
+  require 'uri'
+  u = URI.parse(ARGV[0].strip)
+
+  command = "psql"
+
+  args = ARGV[1..-1].map(&:strip)
+  args << "--host=#{u.host}" if u.host
+  args << "--port=#{u.port}" if u.port
+  args << "--username=#{u.user}" if u.user
+  args << "--dbname=#{u.path[1..-1]}" if u.path != "/"
+
+  ENV["PGPASSWORD"] = u.password if u.password
+
+  exec command, *args
+end
