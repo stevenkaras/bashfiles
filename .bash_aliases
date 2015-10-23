@@ -18,6 +18,10 @@ alias l='ls -CF'
 
 # some git aliases
 function ui_process() {
+    if [ $# -eq 0 ]; then
+        echo "USAGE: ui_process COMMAND [ARGS...]"
+        return 1
+    fi
     (eval "$@" 2>&1 &) >/dev/null
 }
 
