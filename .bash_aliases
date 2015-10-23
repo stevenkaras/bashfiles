@@ -30,7 +30,7 @@ alias gk='ui_process "gitk"'
 
 function loc() {
     echo "   lines   words   chars filename"
-    wc `find . -type f -name $1 | tr '\n' ' '`
+    find . -type f -name $1 | xargs wc
 }
 
 function gitstat() {
