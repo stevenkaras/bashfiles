@@ -63,6 +63,9 @@ alias fucking='sudo'
 alias va='$VISUAL ~/.bash_aliases'
 alias sa='. ~/.bash_aliases'
 alias h?='history | grep'
+function mkcd() {
+    mkdir -p $@ && cd $@
+}
 
 ## Service Development aliases ##
 #################################
