@@ -60,7 +60,7 @@ function explain {
 }
 
 alias fucking='sudo'
-alias va='$EDITOR ~/.bash_aliases'
+alias va='$VISUAL ~/.bash_aliases'
 alias sa='. ~/.bash_aliases'
 alias h?='history | grep'
 
