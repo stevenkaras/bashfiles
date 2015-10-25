@@ -2,3 +2,4 @@
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
 alias notify='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$1"'
+alias subl='ui_process "sublime_text"'
