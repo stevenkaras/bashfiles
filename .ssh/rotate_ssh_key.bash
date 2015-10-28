@@ -6,7 +6,7 @@ function rotate_ssh_key() {
         username="$(whoami)"
     fi
     local server="${1##*@}"
-    local port="${1##*:}"
+    local port="${server##*:}"
     if [[ "$port" == "$server" ]]; then
         port="${2:-22}"
     else
