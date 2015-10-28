@@ -16,11 +16,15 @@ function rotate_ssh_key() {
 
     local id_file="$username@$server.id_rsa"
     local key_to_revoke="$(ssh-keygen -l -f "$HOME/.ssh/$id_file" | cut -d ' ' -f2)"
-    mkdir -p "$HOME/.ssh/old_keys"
-    mv "$HOME/.ssh/$id_file" "$HOME/.ssh/archives/$(date +%Y%m%d-%H%M%S)"
+    mkdir -p "$HOME/.ssh/archive"
+    local archive_id_file="$(date +%Y%m%d-%H%M%S)-$id_file"
+    mv "$HOME/.ssh/$id_file" "$HOME/.ssh/archive/$archive_id_file"
+    mv "$HOME/.ssh/$id_file.pub" "$HOME/.ssh/archive/$archive_id_file.pub"
     # ssh into the server and revoke the specific key we're rotating
-    setup_ssh_key "$username@$server:$port"
-    ssh $username@$server "$(typeset -f revoke_key); revoke_key $key_to_revoke"
+    ssh-keygen -t rsa -b 4096 -C "$(hostname)@$server <$USER_EMAIL>" -f "$HOME/.ssh/$id_file"
+    local new_key="$(cat $HOME/.ssh/$id_file.pub)"
+    ssh -p $port -i "$HOME/.ssh/archive/$archive_id_file" $username@$server "tee -a \$HOME/.ssh/authorized_keys <<<\"$new_key\" >/dev/null; $(typeset -f revoke_key); revoke_key $key_to_revoke"
+    ssh-add "$HOME/.ssh/$id_file"
 }
 
 function revoke_key() {
@@ -38,8 +42,10 @@ function revoke_key() {
         else
             echo "$line"
         fi
-    done < $authorized_keys > $authorized_keys.new
-    mv $authorized_keys.new $authorized_keys
+    done < "$authorized_keys" > "$authorized_keys.new"
+    mkdir -p "$HOME/.ssh/archive"
+    cp "$authorized_keys" "$HOME/.ssh/archive/$(date +%Y%m%d-%H%M%S)-authorized_keys"
+    mv "$authorized_keys.new" "$authorized_keys"
 }
 
 rotate_ssh_key $@
