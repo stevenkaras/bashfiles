@@ -66,6 +66,13 @@ alias h?='history | grep'
 function mkcd() {
     mkdir -p $@ && cd $@
 }
+function anywait() {
+    for pid in "$@"; do
+        while kill -0 "$pid"; do
+            sleep 0.5
+        done
+    done
+}
 
 ## Service Development aliases ##
 #################################
