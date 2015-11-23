@@ -63,6 +63,7 @@ alias fucking='sudo'
 alias va='$VISUAL ~/.bash_aliases'
 alias sa='. ~/.bash_aliases'
 alias h?='history | grep'
+alias sync_history='history -a; history -c; history -r'
 function mkcd() {
     mkdir -p $@ && cd $@
 }
