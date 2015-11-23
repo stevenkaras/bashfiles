@@ -4,3 +4,5 @@
 alias notify='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$1"'
 
 alias run_upgrades='sudo apt-get update && sudo apt-get dist-upgrade -y'
+
+eval "$(lesspipe)"
