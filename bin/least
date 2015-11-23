@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# n.b. I posted this script to:
+# http://unix.stackexchange.com/a/205260/85237
+# https://github.com/johnmellor/scripts/blob/master/bin/least
+
+# Needed so less doesn't prevent trap from working.
+set -m
+# Keeps this script alive when Ctrl+C is pressed in less,
+# so we still cat and rm $TMPFILE afterwards.
+trap '' EXIT
+
+TMPBUFFER=$(mktemp 2>/dev/null || mktemp -t 'tmp')
+
+export LESS=-FR
+if [[ -t 0 ]]; then
+    # Stdin is a terminal (neither a file nor a pipe); hopefully "$@" contains a
+    # filename that less can read into a pipe.
+    LESS= command less "$@" | tee "$TMPBUFFER" | command less "$@"
+else
+    # Stdin is a file or pipe; pass it directly to tee.
+    tee "$TMPBUFFER" | command less "$@"
+fi
+
+if [[ " $LESS $@" =~ \ -(-chop-long-lines|[a-jl-nq-su-zA-CE-NQ-SU-Z]*S) ]]; then
+    # Don't wrap lines, since --chop-long-lines was passed to less.
+    LINECOUNT=$(cat "$TMPBUFFER" | wc -l)
+else
+    # Wrap lines like less before counting (the perl regex strips ANSI escapes).
+    [[ -n $COLUMNS ]] || COLUMNS=$(tput cols)
+    LINECOUNT=$(perl -pe 's/\e\[?.*?[\@-~]//g' "$TMPBUFFER" | fold -w "$COLUMNS" | wc -l)
+fi
+[[ -n $LINES ]] || LINES=$(tput lines)
+if (( $LINECOUNT < $LINES )); then
+    cat "$TMPBUFFER"
+fi
+
+rm "$TMPBUFFER"
