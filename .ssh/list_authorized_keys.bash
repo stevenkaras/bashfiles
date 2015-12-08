@@ -21,4 +21,4 @@ function list_authorized_keys() {
     done
 }
 
-list_authorized_keys $@
+list_authorized_keys "$@"

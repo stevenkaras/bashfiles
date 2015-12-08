@@ -26,4 +26,4 @@ SSH_CONFIG
     ssh-copy-id -i "$HOME/.ssh/$id_file.pub" -p $port $server
 }
 
-setup_ssh_server $@
+setup_ssh_server "$@"

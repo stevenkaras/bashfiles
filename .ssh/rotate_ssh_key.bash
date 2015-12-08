@@ -48,4 +48,4 @@ function revoke_key() {
     mv "$authorized_keys.new" "$authorized_keys"
 }
 
-rotate_ssh_key $@
+rotate_ssh_key "$@"
