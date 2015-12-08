@@ -1,0 +1,87 @@
+#!/usr/bin/env ruby
+
+require 'json'
+
+# take in a series of json documents from ARGV[0] or STDIN
+infile = ARGV[0]
+infile ||= "-"
+
+if infile == "-"
+  infile = STDIN
+else
+  infile = File.open(infile)
+end
+
+schema = {}
+
+def hash_to_schema(hash)
+  return nil unless hash.is_a? Hash
+  result = {}
+  hash.each do |k,v|
+    result[k] ||= []
+    result[k] << v.class
+    case v
+    when Hash
+      subschema = hash_to_schema(v).map{|sk,v| ["#{k}.#{sk}", v]}.to_h
+      result = merge_schemas(result, subschema)
+    when Array
+      subschema = merge_schemas(*v.map{|sv| hash_to_schema(sv)}.compact).map{|sk, v| ["#{k}[].#{sk}", v]}.to_h
+      result = merge_schemas(result, subschema)
+    end
+  end
+  return result
+end
+
+def merge_schemas(*schemas)
+  schemas.reduce({}) do |result, schema|
+    schema.each do |k,v|
+      result[k] ||= []
+      result[k] |= v
+    end
+    result
+  end
+end
+
+def remove_redundant_keys(keys)
+  result = []
+  keys.each do |key|
+    result << key if not keys.any? {|other| other != key && other.start_with?(key) }
+  end
+  result
+end
+
+# p hash_to_schema({"foo": 1})
+# p hash_to_schema(1)
+# p hash_to_schema("foo")
+# p hash_to_schema({foo: [1, 2 ,3]})
+# puts hash_to_schema({foo: [{bar: 1}, {baz: 2}, {bar: "foo"}]})
+# p hash_to_schema({foo: {bar: 1, baz: 2}})
+# p remove_redundant_keys(["foo", "foo[]"])
+
+# exit 0
+
+while true
+  line = infile.gets
+  break unless line
+  line.strip!
+  next if line.empty?
+  json = JSON.parse(line)
+  schema = merge_schemas(schema, hash_to_schema(json))
+end
+
+# schema = remove_redundant_keys(schema)
+type_map = {
+  Fixnum => "Integer",
+  Hash => "Object",
+  FalseClass => "Boolean",
+  TrueClass => "Boolean",
+}
+key_size = schema.keys.map(&:size).max
+schema.sort.each do |key, types|
+  # skip unambiguous objects!
+  next if types == [Hash]
+  types = types.map {|type| type_map[type] || type.to_s }.sort.uniq.join(", ")
+  puts "%-#{key_size}s => %s" % [key, types]
+end
+
+infile.close
