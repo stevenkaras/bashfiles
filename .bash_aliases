@@ -75,6 +75,13 @@ function anywait() {
     done
 }
 
+function track() {
+    time "$@"
+    date
+    local command="$@"
+    notify "completed $command"
+}
+
 ## Service Development aliases ##
 #################################
 
