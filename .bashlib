@@ -7,14 +7,19 @@
 #############################
 # don't put duplicate lines in the history. See bash(1) for more options
 # ... or force ignoredups and ignorespace
-export HISTCONTROL=ignoredups:ignorespace
+export HISTCONTROL=ignorespace
 
 # append to the history file, don't overwrite it
 shopt -s histappend
 
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTSIZE=100000
-HISTFILESIZE=2000000
+export HISTSIZE=
+export HISTFILESIZE=
+export HISTTIMEFORMAT="[%F %T] "
+mkdir "$HOME/.bash_history.d"
+export HISTFILE="$HOME/.bash_history.d/$USER@$HOSTNAME.history"
+
+export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
