@@ -16,7 +16,7 @@ shopt -s histappend
 export HISTSIZE=
 export HISTFILESIZE=
 export HISTTIMEFORMAT="[%F %T] "
-if [[ ! -d "$HOME/.bash_history.d"]]; then
+if [[ ! -d "$HOME/.bash_history.d" ]]; then
     mkdir "$HOME/.bash_history.d"
 fi
 export HISTFILE="$HOME/.bash_history.d/$USER@$HOSTNAME.history"
