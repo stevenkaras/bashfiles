@@ -10,7 +10,7 @@ function graceful_kill() {
 	for ((i=1; i <= $#; i++)); do
 		action=${@:$i:1}
 		# first, check that the process still exists
-		kill -0 "$target_pid"
+		kill -0 "$target_pid" &>/dev/null
 		if [[ $? -eq 1 ]]; then
 			# we didn't reach the end of our list...
 			return 1
@@ -20,7 +20,7 @@ function graceful_kill() {
 				sleep "$action"
 				;;
 			*)
-				kill "$action" "$target_pid"
+				kill "$action" "$target_pid" &>/dev/null
 				;;
 		esac
 	done
