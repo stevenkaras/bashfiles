@@ -69,13 +69,16 @@ function main() {
   fi
   local -a labels
   local -a commands
+  local i
   for i in ${!services[@]}; do
     services[$i]=$( map_service ${services[$i]} )
     labels[$i]="${services[$i]/%=*/}"
     commands[$i]="${services[$i]:((${#labels[$i]} + 1))}"
   done
-  trap "cleanup ${labels[@]}; exit" SIGHUP SIGINT SIGTERM
+  local cleanup_command="cleanup ${labels[@]}; exit"
+  trap "$cleanup_command" SIGHUP SIGINT SIGTERM
   for i in ${!services[@]}; do
+    echo "Starting ${labels[$i]}: ${commands[$i]}"
     ${commands[$i]} > .${labels[$i]}.log &
     echo $! > .${labels[$i]}.pid
   done
