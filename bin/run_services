@@ -12,7 +12,7 @@ function cleanup_from_pid_file() {
   if [[ ! -f "$1" ]]; then
     exit 0
   fi
-  graceful_kill $(cat "$1") -SIGINT 3 -SIGTERM 10
+  graceful_kill $(cat "$1") -SIGINT 3 -SIGTERM 10 -0
   if [[ $? -ne 0 ]]; then
     rm "$1"
     exit 0
