@@ -1,0 +1,41 @@
+#!/usr/bin/env bash -O extglob
+
+# this program is meant to send a sequence of signals to the given program, so long as it is still alive
+
+function graceful_kill() {
+	local target_pid="$1"
+	shift
+	local action
+	local i
+	for ((i=1; i <= $#; i++)); do
+		action=${@:$i:1}
+		# first, check that the process still exists
+		kill -0 "$target_pid"
+		if [[ $? -eq 1 ]]; then
+			# we didn't reach the end of our list...
+			return 1
+		fi
+		case "$action" in
+			+([0-9]))
+				sleep "$action"
+				;;
+			*)
+				kill "$action" "$target_pid"
+				;;
+		esac
+	done
+}
+
+function main() {
+	if [[ $# -lt 2 ]]; then
+		cat <<-USAGE
+			Usage: $(basename "$0") PID [ACTION...]
+
+			Where each ACTION is either the number of seconds to sleep, or a signal to send to the target process
+		USAGE
+		exit 1
+	fi
+	graceful_kill "$@"
+}
+
+main "$@"

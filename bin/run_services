@@ -9,23 +9,14 @@
 # Alternatively, can take a list of services (from either source) in label=command format
 
 function cleanup_from_pid_file() {
-  # send a SIGINT for a graceful shutdown
-  kill -2 $(cat $1) &>/dev/null
-  sleep 3
-  kill -0 $(cat $1) &>/dev/null
-  if [[ $? -eq 1 ]]; then
-    rm $1
+  if [[ ! -f "$1" ]]; then
     exit 0
   fi
-  # a bit more insistent this time, send them SIGTERM
-  kill -15 $(cat $1) &>/dev/null
-  sleep 10
-  kill -0 $(cat $1) &>/dev/null
-  if [[ $? -eq 1 ]]; then
-    rm $1
+  graceful_kill $(cat "$1") -SIGINT 3 -SIGTERM 10
+  if [[ $? -ne 0 ]]; then
+    rm "$1"
     exit 0
   fi
-  # leave it to the user to send SIGKILL
   exit 1
 }
 
