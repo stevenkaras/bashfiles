@@ -94,7 +94,7 @@ alias blog_serve='bundle exec jekyll serve -D -w --config _config_development.ym
 alias prc='RAILS_ENV=production RACK_ENV=production rails c'
 alias myip='curl http://httpbin.org/ip 2>/dev/null | jq -r .origin'
 alias deploy='git push heroku && git push origin && heroku run rake db:migrate && notify deployed'
-alias extractip4='grep -o -E -e '"'"'[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}'"'"''
+alias extractip4='grep -o -E -e '"'"'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'"'"''
 alias dockerip='ip -4 addr show docker0 | extractip4'
 alias dockergc='docker images -f dangling=true | tail -n+2 | cut -c41-52 | xargs -I {} docker rmi {}'
 
