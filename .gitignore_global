@@ -8,6 +8,7 @@
 *.so
 *.dylib
 *.gem
+*.pyc
 
 # Packages #
 ############
