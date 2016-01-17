@@ -18,7 +18,7 @@ function __svnroot() {
 
 # outputs the location of the .svn directory
 function __svn_dir() {
-	if [ -z "${1-}" ]; then
+	if [ -z "${1:-}" ]; then
 		echo ".svn"
 	else
 		echo "$1/.svn"

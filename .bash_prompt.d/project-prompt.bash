@@ -1,4 +1,22 @@
 
+# USAGE: __root SPECIAL_DIR
+#
+# Transcends the current path, checking for the existence of the given "special" dir
+function __transcend_root() {
+  local current=""
+  local parent="$PWD"
+
+  until [[ "$current" == "$parent" ]]; do
+    if [[ -e "$parent/$1" ]]; then
+      echo "$parent"
+      return 0
+    fi
+
+    current="$parent"
+    parent=$(dirname "$parent")
+  done
+}
+
 # determine the root of the project
 function project_root() {
   local result
@@ -7,7 +25,7 @@ function project_root() {
   if [ ! -z "$gitdir" ]; then
     result=$(dirname $gitdir)
   else
-    local svnroot=$(__svnroot)
+    local svnroot=$(__transcend_root .svn)
     if [ ! -z "$svnroot" ]; then
       result=$svnroot
     fi
