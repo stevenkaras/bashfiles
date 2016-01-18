@@ -2,6 +2,6 @@
 
 function __ssh_host() {
 	if [[ -n "$SSH_CLIENT" ]]; then
-		echo "$USER@$HOSTNAME"
+		echo "$USER@$HOSTNAME "
 	fi
 }
