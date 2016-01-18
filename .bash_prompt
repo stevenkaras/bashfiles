@@ -8,7 +8,7 @@ done
 
 ## build the actual prompt ##
 #############################
-PROMPT_CHUNK_SIMPLE="\[\e[33m\]\$(project_ps1)"
+PROMPT_CHUNK_SIMPLE="\[\e[33m\]\$(__ssh_host)\$(project_ps1)"
 
 # add git to the prompt
 export GIT_PS1_SHOWDIRTYSTATE=true
