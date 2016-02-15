@@ -39,6 +39,10 @@ function gitstat() {
 
 ## shell commands ##
 ####################
+function exitcode() {
+    local code="${1:-0}"
+    return $code
+}
 
 # Launch explain shell website for a commnad
 function explain {
