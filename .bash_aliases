@@ -80,7 +80,7 @@ function anywait() {
 }
 
 function track() {
-    time "$@"
+    \time -v "$@"
     date
     local command="$@"
     notify "completed $command"
