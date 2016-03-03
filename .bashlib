@@ -29,6 +29,9 @@ export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; histor
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
+shopt -s cdspell
+shopt -s dirspell
+
 # Alias definitions
 if [ -f ~/.bash_aliases ]; then
   . ~/.bash_aliases
