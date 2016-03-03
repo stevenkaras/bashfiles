@@ -68,6 +68,7 @@ alias va='$VISUAL ~/.bash_aliases'
 alias sa='. ~/.bash_aliases'
 alias h?='history | grep'
 alias sync_history='history -a; history -c; history -r'
+alias frequent_history='history | cut -c30- | sort | uniq -c | sort -nr | head' # for finding common commands to ignore
 function mkcd() {
     mkdir -p $@ && cd $@
 }
