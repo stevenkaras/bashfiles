@@ -33,7 +33,9 @@ export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; histor
 shopt -s checkwinsize
 
 shopt -s cdspell
-shopt -s dirspell
+if [[ ! "${BASH_VERSION:0:3}" < "4.2" ]]; then
+	shopt -s dirspell
+fi
 
 # Alias definitions
 if [ -f ~/.bash_aliases ]; then
