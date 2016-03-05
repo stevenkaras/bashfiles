@@ -1,0 +1,107 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+
+MonthNames = {
+  1 => "January",
+  2 => "February",
+  3 => "March",
+  4 => "April",
+  5 => "May",
+  6 => "June",
+  7 => "July",
+  8 => "August",
+  9 => "September",
+  10 => "October",
+  11 => "November",
+  12 => "December",
+}
+
+def likely_destination_dir?(dir)
+  return File.exist?(File.expand_path(Time.now.year.to_s, dir))
+end
+
+def likely_source_dir?(dir)
+  pdfs = Dir[File.expand_path("*.pdf", dir)]
+  all_files = Dir[File.expand_path("*", dir)]
+  return pdfs.size > 0 && ((all_files.size - pdfs.size) / all_files.size.to_f) > 0.5
+end
+
+def confirm_suspected_dir(source, dest)
+  unless likely_source_dir(source) && likely_destination_dir(dest)
+    raise "Can't automatically detect directories"
+  end
+  return source, dest
+end
+
+def determine_dirs(args)
+  case args.size
+  when 1
+    puts "attempting auto-discovery based on current directory"
+    if likely_destination_dir?(Dir.pwd)
+      puts "found directory for current year. Assuming this is the destination"
+      return confirm_suspected_dir(args[0], Dir.pwd)
+    end
+
+    if likely_source_dir?(Dir.pwd)
+      puts "found more than 50% pdfs in current dir. Assuming this is the source"
+      return confirm_suspected_dir(Dir.pwd, args[0])
+    end
+    raise "Can't make an intelligent decision"
+  when 2
+    return args[0], args[1]
+  else
+    raise ""
+  end
+end
+
+def main(args)
+  begin
+    source, destination_root = determine_dirs(args)
+  rescue => e
+    puts "Error: #{e.message}" if e.message != ""
+    puts <<-USAGE.gsub(/^ +/, "")
+      USAGE: #{File.basename($PROGRAM_NAME)} SOURCE_DIR DEST_ROOT
+    USAGE
+    exit 1
+  end
+  source = File.expand_path(source)
+  destination_root = File.expand_path(destination_root)
+
+  unless File.directory?(source)
+    puts "#{source} is not a directory"
+    exit 1
+  end
+  unless File.directory?(destination_root)
+    puts "#{destination_root} is not a directory"
+    exit 1
+  end
+
+  files_to_sort = Dir["#{source}/*.pdf"]
+  puts "Sorting out #{files_to_sort.size} pdfs"
+  files_to_sort.each do |file_path|
+    filename = File.basename(file_path)
+    unless filename =~ /^(?<year>\d{4})(?<month>\d{2})(?<day>\d{2}) - .*$/
+      puts "skipping #{filename}"
+      next
+    end
+
+    destination_folder = "#{destination_root}/#{$~[:year]}/#{"%02d" % $~[:month].to_i} - #{MonthNames[$~[:month].to_i]}"
+    FileUtils.mkdir_p(destination_folder)
+    destination_file = "#{destination_folder}/#{filename}"
+    if File.exist?(destination_file)
+      if File.binread(file_path) == File.binread(destination_file)
+        FileUtils.rm(file_path)
+        next
+      end
+
+      puts "skipping file with same name, but different than destination: #{filename}"
+      next
+    end
+    FileUtils.mv(file_path, destination_file, verbose: true)
+  end
+end
+
+if __FILE__ == $PROGRAM_NAME
+  main(ARGV)
+end
