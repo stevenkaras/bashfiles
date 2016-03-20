@@ -46,3 +46,9 @@ Thumbs.db
 .ipynb_checkpoints/
 .bundle/
 .stfolder
+
+# My personal typical trash #
+#############################
+sandbox.*
+.issues/
+.docs/
