@@ -106,3 +106,6 @@ alias dockergc='docker images -f dangling=true | tail -n+2 | cut -c41-52 | xargs
 function docker-ssh-push() {
     docker save $2 | bzip2 | pv | ssh $1 'bunzip2 | docker load'
 }
+
+alias json2bson='ruby -rjson -rbson -n -e "puts JSON.parse(\$_).to_bson.to_s"'
+alias bson2json='ruby -rjson -rbson -n -e "puts Hash.from_bson(BSON::ByteBuffer.new(\$_)).to_json"'
