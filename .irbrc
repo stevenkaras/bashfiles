@@ -1,5 +1,24 @@
+require 'irb/completion'
+require 'pp'
+IRB.conf[:AUTO_INDENT]=true
 
-require "irb/completion"
+class Object
+  def interesting_methods
+    self.methods - Object.new.methods
+  end
+end
+
+class Module
+  def interesting_methods
+    self.methods - Math.methods
+  end
+end
+
+class Class
+  def interesting_methods
+    self.methods - Class.methods
+  end
+end
 
 module Enumerable
   def progress
@@ -14,11 +33,5 @@ module Enumerable
       end
       yield item
     end
-  end
-end
-
-class Object
-  def interesting_methods
-    return self.methods - Object.new.methods
   end
 end
