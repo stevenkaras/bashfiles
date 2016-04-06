@@ -63,6 +63,7 @@ function explain {
     open $url
 }
 
+alias mux='tmuxinator'
 alias fucking='sudo'
 alias va='$VISUAL ~/.bash_aliases'
 alias sa='. ~/.bash_aliases'
