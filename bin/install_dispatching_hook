@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 HOOKS_DIR="$(git rev-parse --git-dir)/hooks"
-HOOKS="applypatch-msg pre-applypatch post-applypatch pre-commit prepare-commit-msg commit-msg post-commit pre-rebase post-checkout post-merge pre-receive update post-receive post-update pre-auto-gc"
+HOOKS="applypatch-msg pre-applypatch post-applypatch pre-commit prepare-commit-msg commit-msg post-commit pre-rebase post-checkout post-merge pre-receive update post-receive post-update pre-auto-gc pre-svn-rebase post-svn-rebase pre-svn-dcommit post-svn-dcommit"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DISPATCHING_HOOK="$(dirname "$DIR")/githooks/dispatching_hook"
 

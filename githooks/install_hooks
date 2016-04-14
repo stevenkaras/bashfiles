@@ -6,7 +6,7 @@
 # into your project. Please leave this notice in the file so you can find the most up to date version of this script.
 
 HOOKS_DIR="$(git rev-parse --git-dir)/hooks"
-HOOKS="applypatch-msg pre-applypatch post-applypatch pre-commit prepare-commit-msg commit-msg post-commit pre-rebase post-checkout post-merge pre-receive update post-receive post-update pre-auto-gc"
+HOOKS="applypatch-msg pre-applypatch post-applypatch pre-commit prepare-commit-msg commit-msg post-commit pre-rebase post-checkout post-merge pre-receive update post-receive post-update pre-auto-gc pre-svn-rebase post-svn-rebase pre-svn-dcommit post-svn-dcommit"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # install the given hook
