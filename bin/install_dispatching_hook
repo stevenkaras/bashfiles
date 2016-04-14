@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+HOOKS_DIR="$(git rev-parse --git-dir)/hooks"
+HOOKS="applypatch-msg pre-applypatch post-applypatch pre-commit prepare-commit-msg commit-msg post-commit pre-rebase post-checkout post-merge pre-receive update post-receive post-update pre-auto-gc"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DISPATCHING_HOOK="$(dirname "$DIR")/githooks/dispatching_hook"
+
+# Follow symbolic links (needed because -m is a GNU extension to readlink)
+function resolve_symlink() {
+	local resolved_path="$1"
+	while [[ -h "$resolved_path" ]]; do
+		resolved_dir="$( cd -P "$(dirname "$resolved_path")" && pwd )"
+		resolved_path="$(readlink -n "$resolved_path")"
+		# handle relative symlinks
+		[[ "$resolved_path" != /* ]] && resolved_path="$resolved_dir/$resolved_path"
+	done
+	echo "$resolved_path"
+}
+
+function relocate_hook() {
+	# move the hook out of the way, unless it's a symlink to the dispatching hook
+	local hook_name="$1"
+	local hook_path="$HOOKS_DIR/$hook_name"
+	if [[ ! -e "$hook_path" ]]; then
+		return 0
+	fi
+	if [[ -h "$hook_path" ]]; then
+		local resolved_symlink="$(resolve_symlink "$hook_path")"
+		if [[ "$resolved_symlink" == "$(resolve_symlink "$DISPATCHING_HOOK")" ]]; then
+			return 0
+		fi
+	fi
+
+	mv "$hook_path" "$hook_path.local"
+}
+
+# install the given hook
+function install_hook() {
+	local hook_name="$1"
+	relocate_hook "$hook_name"
+	ln -sf "$DISPATCHING_HOOK" "$HOOKS_DIR/$hook_name"
+}
+
+for hook in $HOOKS; do
+	install_hook "$hook"
+done

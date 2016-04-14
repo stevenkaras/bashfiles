@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+HOOK_NAME="$(basename "${BASH_SOURCE[0]}")"
+
+# source any hooks found in the given path, if it exists
+# if the path is a file, source it
+function run_hooks() {
+	local HOOKS="$1"
+	if [[ -f "$HOOKS" && -x "$HOOKS" ]]; then
+		"$HOOKS" "$@" || exit $?
+	elif [[ -d "$HOOKS" ]]; then
+		for HOOK in "$HOOKS/*"; do
+			if [[ -f "$HOOK" && -x "$HOOK" ]]; then
+				"$HOOK" "$@" || exit $?
+			fi
+		done
+	fi
+}
+
+# source user hooks
+run_hooks "$HOME/.githooks/$HOOK_NAME"
+
+# run project hooks
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+run_hooks "$PROJECT_ROOT/bin/githooks/$HOOK_NAME"
+run_hooks "$PROJECT_ROOT/bin/githooks/$HOOK_NAME.hook"
+run_hooks "$PROJECT_ROOT/.githooks/$HOOK_NAME"
+run_hooks "$PROJECT_ROOT/.githooks/$HOOK_NAME.hook"
+GIT_DIR="$(git rev-parse --git-dir)"
+run_hooks "$GIT_DIR/hooks/$HOOK_NAME.local"
