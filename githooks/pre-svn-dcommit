@@ -1,0 +1,10 @@
+#!/bin/sh
+
+git stash -u
+
+if ! git svn rebase; then
+    echo "WARNING: rebase failed"
+    exit 1;
+fi
+
+exit 0

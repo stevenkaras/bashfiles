@@ -1,0 +1,3 @@
+#!/bin/sh
+
+git stash pop # stashed in pre-svn-dcommit hook
