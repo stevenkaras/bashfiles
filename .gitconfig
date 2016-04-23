@@ -1,0 +1,37 @@
+[user]
+  name = Steven Karas
+  email = steven.karas@gmail.com
+[core]
+  editor = subl -w
+  excludesfile = ~/.gitignore_global
+[alias]
+  unstash = stash pop
+  st = status
+  ci = commit
+  br = branch
+  co = checkout
+  df = diff
+  dif = diff
+  dfw = diff -w
+  dc = diff --cached
+  lgs = log -p
+  fix = commit --amend -C HEAD
+  lol = log --graph --decorate --pretty=oneline --abbrev-commit
+  lola = log -- graph --decorate --pretty=oneline --abbrev-commit --all
+  ls = ls-files
+  act = for-each-ref --sort=-committerdate refs/heads/
+  # show files ignored by git
+  ign = ls-files -o -i --exclude-standard
+
+  # show commits made directly to this branch
+  direct = log --first-parent --no-merges
+  lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+[gui]
+  diffcontext = 3
+[color]
+  diff = auto
+  status = auto
+  branch = auto
+  ui = auto
+[push]
+  default = simple
