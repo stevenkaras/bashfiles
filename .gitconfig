@@ -22,6 +22,7 @@
   act = for-each-ref --sort=-committerdate refs/heads/
   # show files ignored by git
   ign = ls-files -o -i --exclude-standard
+  force-pull = !git fetch && git reset --hard @{u}
 
   # show commits made directly to this branch
   direct = log --first-parent --no-merges
@@ -35,3 +36,6 @@
   ui = auto
 [push]
   default = simple
+[rebase]
+  autostash = true
+  autosquash = true
