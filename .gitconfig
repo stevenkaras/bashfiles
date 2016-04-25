@@ -7,14 +7,8 @@
 [alias]
   unstash = stash pop
   st = status
-  ci = commit
   br = branch
   co = checkout
-  df = diff
-  dif = diff
-  dfw = diff -w
-  dc = diff --cached
-  lgs = log -p
   fix = commit --amend -C HEAD
   lol = log --graph --decorate --pretty=oneline --abbrev-commit
   lola = log -- graph --decorate --pretty=oneline --abbrev-commit --all
