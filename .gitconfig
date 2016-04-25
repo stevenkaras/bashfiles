@@ -18,6 +18,10 @@
   ign = ls-files -o -i --exclude-standard
   force-pull = !git fetch && git reset --hard @{u}
 
+  # inspired by Human Git Aliases (http://gggritso.com/human-git-aliases)
+  unstage = reset -q HEAD --
+  discard = checkout --
+
   # show commits made directly to this branch
   direct = log --first-parent --no-merges
   lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
