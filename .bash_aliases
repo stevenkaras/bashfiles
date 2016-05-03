@@ -23,6 +23,7 @@ function ui_process() {
     (eval "$@" 2>&1 &) >/dev/null
 }
 
+function faketty { script -qfc "$(printf "%q " "$@")"; }
 
 function exitcode() {
     local code="${1:-0}"
