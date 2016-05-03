@@ -6,3 +6,5 @@ endif
 
 set showmatch
 set showcmd
+
+syntax enable
