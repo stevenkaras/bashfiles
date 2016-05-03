@@ -1,7 +1,0 @@
-#!/usr/bin/env ruby
-
-content = STDIN.read
-
-require 'erb'
-
-puts "<pre>" + ERB::Util.html_escape(content) + "</pre>"

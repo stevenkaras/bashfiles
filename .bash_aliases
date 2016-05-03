@@ -70,6 +70,7 @@ alias sa='. ~/.bash_aliases'
 alias h?='history | grep'
 alias sync_history='history -a; history -c; history -r'
 alias frequent_history='history | cut -c30- | sort | uniq -c | sort -nr | head' # for finding common commands to ignore
+alias htmlmail='python -c "import cgi,sys; print('"'"'<pre>'"'"' + cgi.escape(sys.stdin.read()).encode("ascii","xmlcharrefreplace") + '"'"'</pre>'"'"')" | mail -E -a "Content-Type: text/html" '
 function mkcd() {
     mkdir -p $@ && cd $@
 }
