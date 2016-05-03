@@ -13,10 +13,8 @@ alias la='ls -AF'
 alias l.='ls -d .*'
 alias l='ls -CF'
 
-## version control ##
-#####################
-
-# some git aliases
+## shell commands ##
+####################
 function ui_process() {
     if [ $# -eq 0 ]; then
         echo "USAGE: ui_process COMMAND [ARGS...]"
@@ -25,20 +23,7 @@ function ui_process() {
     (eval "$@" 2>&1 &) >/dev/null
 }
 
-alias gg='ui_process "git gui"'
-alias gk='ui_process "gitk"'
 
-function loc() {
-    echo "   lines   words   chars filename"
-    find . -type f -name $1 | xargs wc
-}
-
-function gitstat() {
-    git log --author=$1 --pretty=tformat: --numstat | awk '{ adds += $1; subs += $2; loc += $1 - $2 } END { printf "added: %s removed: %s total: %s\n",adds,subs,loc }' -
-}
-
-## shell commands ##
-####################
 function exitcode() {
     local code="${1:-0}"
     return $code
@@ -87,6 +72,22 @@ function track() {
     date
     local command="$@"
     notify "completed $command"
+}
+
+## version control ##
+#####################
+
+# some git aliases
+alias gg='ui_process "git gui"'
+alias gk='ui_process "gitk"'
+
+function loc() {
+    echo "   lines   words   chars filename"
+    find . -type f -name $1 | xargs wc
+}
+
+function gitstat() {
+    git log --author=$1 --pretty=tformat: --numstat | awk '{ adds += $1; subs += $2; loc += $1 - $2 } END { printf "added: %s removed: %s total: %s\n",adds,subs,loc }' -
 }
 
 ## Service Development aliases ##
