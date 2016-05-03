@@ -5,4 +5,4 @@ alias notify='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || ech
 
 alias run_upgrades='sudo apt-get update && sudo apt-get dist-upgrade -y'
 
-eval "$(lesspipe)"
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
