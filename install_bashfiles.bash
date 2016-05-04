@@ -19,7 +19,7 @@ function do_install() {
 	local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 	for bashfile in "$ROOTDIR"/.bash*; do
-		ln -s "$bashfile" "~/$(basename "$bashfile")"
+		ln -s "$bashfile" "$HOME/$(basename "$bashfile")"
 	done
 	local platform=$(_platform)
 	# inject the bashfiles
@@ -34,12 +34,12 @@ function do_install() {
 	BASH
 
 	# Setup binary links
-	mkdir -p ~/bin
+	mkdir -p "$HOME/bin"
 	for binary in "$ROOTDIR"/bin/*; do
-		ln -s "$binary" "~/bin/$(basename "$binary")"
+		ln -s "$binary" "$HOME/bin/$(basename "$binary")"
 	done
 	for ssh_binary in "$ROOTDIR"/.ssh/*.bash; do
-		ln -s "$ssh_binary" "~/bin/$(basename "${ssh_binary%%.bash}")"
+		ln -s "$ssh_binary" "$HOME/bin/$(basename "${ssh_binary%%.bash}")"
 	done
 }
 
