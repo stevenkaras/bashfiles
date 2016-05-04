@@ -23,7 +23,7 @@ function do_install() {
 	done
 	local platform=$(_platform)
 	# inject the bashfiles
-	cat <<-BASH > $HOME/.bashrc
+	cat <<-BASH >> $HOME/.bashrc
 		if [ -f "$HOME/.bashrc_$platform" ]; then
 		    . "$HOME/.bashrc_$platform"
 		fi
