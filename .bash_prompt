@@ -9,7 +9,7 @@ done
 ## build the actual prompt ##
 #############################
 # NOTE: the remote host is calculated at shell startup, and depend on the USER/HOSTNAME envvars
-PROMPT_CHUNK_SIMPLE="$(__remote_host)\$(project_ps1)"
+PROMPT_CHUNK_SIMPLE="\[\e[${PREFERRED_COLOR:-33}m\]$(__remote_host)\$(project_ps1)"
 
 # add git to the prompt
 export GIT_PS1_SHOWDIRTYSTATE=true

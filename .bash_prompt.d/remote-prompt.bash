@@ -16,15 +16,6 @@ function __remote_host() {
 		fi
 	fi
 
-	if [[ -n "$PREFERRED_COLOR" ]]; then
-		echo "\[\e[${PREFERRED_COLOR}m\]"
-	elif [ type python >/dev/null 2>&1 ]; then
-		# determine the color based on the user and hostname
-		python -c 'import binascii,getpass,socket;id="%s@%s" % (getpass.getuser(), socket.gethostname(),);hsh=binascii.crc32(id);idx=(hsh % (38-31)) + 31;print("\\[\\e[%sm\\]" % (idx,))'
-	else
-		echo "\[\e[33m\]"
-	fi
-
 	if [[ -n "$show_host" ]]; then
 		echo "$USER@$HOSTNAME "
 	fi
