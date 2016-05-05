@@ -49,6 +49,9 @@ function explain {
     open $url
 }
 
+function sshmux() {
+    ssh -t "$@" tmux new -A
+}
 alias mux='tmuxinator'
 alias fucking='sudo'
 alias va='$VISUAL ~/.bash_aliases'
