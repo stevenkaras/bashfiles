@@ -19,7 +19,7 @@ function do_install() {
 	local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 	for bashfile in "$ROOTDIR"/.bash*; do
-		ln -s "$bashfile" "$HOME/$(basename "$bashfile")"
+		ln -s -T "$bashfile" "$HOME/$(basename "$bashfile")"
 	done
 	local platform=$(_platform)
 	# inject the bashfiles
@@ -36,10 +36,15 @@ function do_install() {
 	# Setup binary links
 	mkdir -p "$HOME/bin"
 	for binary in "$ROOTDIR"/bin/*; do
-		ln -s "$binary" "$HOME/bin/$(basename "$binary")"
+		ln -s -T "$binary" "$HOME/bin/$(basename "$binary")"
 	done
 	for ssh_binary in "$ROOTDIR"/.ssh/*.bash; do
-		ln -s "$ssh_binary" "$HOME/bin/$(basename "${ssh_binary%%.bash}")"
+		ln -s -T "$ssh_binary" "$HOME/bin/$(basename "${ssh_binary%%.bash}")"
+	done
+
+	# other files to symlink
+	for otherfile in .tmux.conf .gitignore_global .vimrc .vim .irbrc .psqlrc; do
+		ln -s -T "$ROOTDIR/$otherfile" "$HOME/$otherfile"
 	done
 }
 
