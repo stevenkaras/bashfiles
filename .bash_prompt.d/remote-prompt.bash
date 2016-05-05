@@ -11,7 +11,7 @@ function __remote_host() {
 
 	# check if we're running ubuntu-server, if so, always show the host
 	if type -t dpkg >/dev/null 2>&1; then
-		if dpkg -s ubuntu-desktop >/dev/null 2>&1; then
+		if ! dpkg -s ubuntu-desktop >/dev/null 2>&1; then
 			show_host="yes"
 		fi
 	fi
