@@ -34,6 +34,10 @@ function fallback_prompt() {
 # Change the terminal title when switching directories #
 ########################################################
 function project_set_title() {
+	local title="$PROJECT_NAME"
+	if is_remote; then
+		title="$HOSTNAME${title:+:$title}"
+	fi
 	set_title "$title"
 }
 CHDIR_COMMAND="${CHDIR_COMMAND}project_set_title;"
