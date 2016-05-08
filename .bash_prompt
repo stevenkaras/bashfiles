@@ -3,7 +3,7 @@
 ## include all the prompt libraries ##
 ######################################
 for prompt_lib in `ls ~/.bash_prompt.d`; do
-    . ~/.bash_prompt.d/$prompt_lib
+	. ~/.bash_prompt.d/$prompt_lib
 done
 
 ## build the actual prompt ##
@@ -34,7 +34,7 @@ function fallback_prompt() {
 # Change the terminal title when switching directories #
 ########################################################
 function project_set_title() {
-    set_title $PROJECT_NAME
+	set_title "$title"
 }
 CHDIR_COMMAND="${CHDIR_COMMAND}project_set_title;"
 
