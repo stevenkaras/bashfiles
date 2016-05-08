@@ -6,11 +6,14 @@
 # Arguments:
 #  1 - the title to set
 function set_title() {
-    case $TERM in
-    xterm*)
-        echo -ne "\033]0;$1\a"
-        ;;
-    *)
-        ;;
-    esac
+	case $TERM in
+	screen*|tmux*)
+		printf "\033k$1\033\\"
+		;;
+	xterm*)
+		printf "\033]0;$1\a"
+		;;
+	*)
+		;;
+	esac
 }
