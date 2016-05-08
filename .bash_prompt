@@ -40,6 +40,6 @@ function project_set_title() {
 	fi
 	set_title "$title"
 }
-CHDIR_COMMAND="${CHDIR_COMMAND}project_set_title;"
+# CHDIR_COMMAND="${CHDIR_COMMAND}project_set_title;"
 
 unset color_prompt force_color_prompt
