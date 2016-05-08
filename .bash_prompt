@@ -14,7 +14,7 @@ PROMPT_CHUNK_SIMPLE="\[\e[${PREFERRED_COLOR:-33}m\]$(__remote_host)\$(project_ps
 # add git to the prompt
 export GIT_PS1_SHOWDIRTYSTATE=true
 export GIT_PS1_SHOWSTASHSTATE=true
-# GIT_PS1_SHOWUPSTREAM="false"
+#export  GIT_PS1_SHOWUPSTREAM="false"
 export GIT_PS1_SHOWUNTRACKEDFILES=true
 PROMPT_CHUNK_GIT="\[\e[91m\]\$(__git_ps1 ' (%s) ')"
 
