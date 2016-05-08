@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# portions based on https://github.com/nojhan/dotfiles/blob/master/lessfilter.sh
+
+if ! type -t /usr/local/bin/pygmentize >/dev/null 2>&1; then
+	exit 1
+fi
+
+case "$1" in
+	*.rb|Rakefile|*.rake|*.gemspec|Gemfile)
+		pygmentize -f 256 -l ruby "$1"
+		;;
+	*.awk|*.groff|*.java|*.js|*.m4|*.php|*.pl|*.pm|*.pod|*.sh|*.ad[asb]|*.asm|*.inc|*.[ch]|*.[ch]pp|*.[ch]xx|*.cc|*.hh|*.lsp|*.l|*.pas|*.p|*.xml|*.xps|*.xsl|*.axp|*.ppd|*.pov|*.diff|*.patch|*.py|*.sql|*.ebuild|*.eclass)
+		pygmentize -f 256 "$1"
+		;;
+	.bashrc|.bash_aliases|.bash_environment)
+		pygmentize -f 256 -l sh "$1"
+		;;
+	*)
+		# fall back on file
+		case "$(file -L -b -i "$1" | cut -f 1)" in
+			text/x-shellscript)
+				pygmentize -f 256 -l sh "$1"
+				;;
+			*)
+				exit 1
+				;;
+		esac
+		;;
+esac
+
+exit 0
