@@ -50,7 +50,7 @@ function explain {
 }
 
 function sshmux() {
-    ssh -t "$@" tmux new -A
+    ssh -t "$@" tmux new -A -s $USER
 }
 alias mux='tmuxinator'
 alias fucking='sudo'
