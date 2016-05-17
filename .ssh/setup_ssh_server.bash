@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# create a new ssh keypair, setup the server in the ssh config,
+# and push the new key into the authorized keys for that server
+#
+# Roughly equivalent to:
+# ssh-keygen -t rsa -b 4096 -C "$(hostname)@server <$USER_EMAIL>" -f ~/.ssh/user@server.id_rsa
+# cat ~/.ssh/user@server.id_rsa.pub | ssh user@server "cat > \$HOME/.ssh/authorized_keys"
+
 function setup_ssh_server() {
     local username="${1%@*}"
     if [[ "$username" == "$1" ]]; then
