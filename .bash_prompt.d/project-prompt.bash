@@ -25,10 +25,7 @@ function __project_resolve_symlinks() {
   local current="${2:-$PWD}"
 
   until [[ "$previous" == "$current" ]]; do
-    if [[ "$current" == "$1" ]]; then
-      echo "$current"
-      return 0
-    elif [[ $(readlink -n "$current") == "$1" ]]; then
+    if [[ "$current" -ef "$1" ]]; then
       echo "$current"
       return 0
     fi
@@ -37,7 +34,6 @@ function __project_resolve_symlinks() {
     current=$(dirname "$current")
   done
 
-  echo "${2:-$PWD}"
   return 1
 }
 
