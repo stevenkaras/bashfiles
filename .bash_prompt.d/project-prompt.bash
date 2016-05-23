@@ -1,5 +1,5 @@
 
-# USAGE: __root SPECIAL_DIR
+# USAGE: __transcend_root SPECIAL_DIR
 #
 # Transcends the current path, checking for the existence of the given "special" dir
 function __transcend_root() {
@@ -17,13 +17,37 @@ function __transcend_root() {
   done
 }
 
+# resolve symlinks to find the apparent project root
+#
+# USAGE: __project_resolve_symlinks PROJECT_ROOT [APPARENT_PWD]
+function __project_resolve_symlinks() {
+  local previous=""
+  local current="${2:-$PWD}"
+
+  until [[ "$previous" == "$current" ]]; do
+    if [[ "$current" == "$1" ]]; then
+      echo "$current"
+      return 0
+    elif [[ $(readlink -n "$current") == "$1" ]]; then
+      echo "$current"
+      return 0
+    fi
+
+    previous="$current"
+    current=$(dirname "$current")
+  done
+
+  echo "${2:-$PWD}"
+  return 1
+}
+
 # determine the root of the project
 function project_root() {
   local result
 
-  local gitdir=$(__gitdir)
-  if [ ! -z "$gitdir" ]; then
-    result=$(dirname $gitdir)
+  local gitroot="$(git rev-parse --show-toplevel 2>/dev/null)"
+  if [ ! -z "$gitroot" ]; then
+    result="$(__project_resolve_symlinks "$gitroot" "$PWD")"
   else
     local svnroot=$(__transcend_root .svn)
     if [ ! -z "$svnroot" ]; then
