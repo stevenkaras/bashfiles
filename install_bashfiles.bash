@@ -49,6 +49,9 @@ function do_install() {
 	for otherfile in .tmux.conf .gitignore_global .vimrc .vim .irbrc .psqlrc .lessfilter .inputrc; do
 		ln -s -T "$ROOTDIR/$otherfile" "$HOME/$otherfile" 2>/dev/null
 	done
+
+	# copy the gitconfig in as a file, not symlinked (because it is expected to change)
+	[[ ! -e "$HOME/.gitconfig" ]] && cp "$ROOTDIR/.gitconfig" "$HOME/.gitconfig"
 }
 
 do_install "$@"
