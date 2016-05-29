@@ -1,0 +1,5 @@
+# iTerm2 is retarded, and I have to set this for it to send the correct keystrokes
+"\e[1;5D": backward-word
+"\e[1;5C": forward-word
+"\e[1;9D": backward-word
+"\e[1;9C": forward-word

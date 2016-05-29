@@ -46,7 +46,7 @@ function do_install() {
 	done
 
 	# other files to symlink
-	for otherfile in .tmux.conf .gitignore_global .vimrc .vim .irbrc .psqlrc .lessfilter; do
+	for otherfile in .tmux.conf .gitignore_global .vimrc .vim .irbrc .psqlrc .lessfilter .inputrc; do
 		ln -s -T "$ROOTDIR/$otherfile" "$HOME/$otherfile" 2>/dev/null
 	done
 }
