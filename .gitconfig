@@ -2,7 +2,6 @@
   name = Steven Karas
   email = steven.karas@gmail.com
 [core]
-  editor = subl -w
   excludesfile = ~/.gitignore_global
 [alias]
   unstash = stash pop
