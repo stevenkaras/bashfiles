@@ -5,7 +5,7 @@
 #
 # Roughly equivalent to:
 # ssh-keygen -t rsa -b 4096 -C "$(hostname)@server <$USER_EMAIL>" -f ~/.ssh/user@server.id_rsa
-# cat ~/.ssh/user@server.id_rsa.pub | ssh user@server "cat > \$HOME/.ssh/authorized_keys"
+# cat ~/.ssh/user@server.id_rsa.pub | ssh user@server "cat >> \$HOME/.ssh/authorized_keys"
 
 function setup_ssh_server() {
     local username="${1%@*}"
