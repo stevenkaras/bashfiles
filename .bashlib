@@ -2,8 +2,8 @@
 
 # If not running interactively, don't do anything
 case $- in
-	*i*) ;;
-	  *) return;;
+*i*) ;;
+*) return;;
 esac
 
 ## set up the bash history ##
@@ -34,18 +34,18 @@ shopt -s checkwinsize
 
 shopt -s cdspell
 if [[ ! "${BASH_VERSION:0:3}" < "4.2" ]]; then
-	shopt -s dirspell
+    shopt -s dirspell
 fi
 
 # Alias definitions
-if [ -f ~/.bash_aliases ]; then
-  . ~/.bash_aliases
+if [[ -f "$HOME"/.bash_aliases ]]; then
+    . "$HOME"/.bash_aliases
 fi
 
 ## include the bash libraries ##
 ################################
-for lib in $(ls ~/.bash_lib.d); do
-    . ~/.bash_lib.d/$lib
+for lib in "$HOME"/.bash_lib.d/*; do
+    . "$lib"
 done
 
 ## set up bash completion ##
@@ -55,10 +55,10 @@ done
 # sources /etc/bash.bashrc).
 set completion-ignore-case on
 
-for prog in $(ls ~/.bash_completion.d); do
-    . ~/.bash_completion.d/$prog
+for prog in "$HOME"/.bash_completion.d/*; do
+    . "$prog"
 done
 
-if [ -f ~/.bash_prompt ]; then
-    . ~/.bash_prompt
+if [ -f "$HOME"/.bash_prompt ]; then
+    . "$HOME"/.bash_prompt
 fi
