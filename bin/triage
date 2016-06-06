@@ -1,0 +1,121 @@
+#!/usr/bin/env ruby
+
+require 'thunder'
+
+class Triage
+  class Log
+    def initialize
+      @tasks = []
+    end
+
+    attr_accessor :tasks
+
+    def self.load(file)
+      log = self.new()
+      current_task = nil
+      file.lines.map(&:strip).each do |line|
+        next if line.empty? && current_task.nil?
+        if line =~ /^(?<date>\d{8}) - (?<subject>.+)$/
+          current_task = Task.new($~[:date], $~[:subject], "")
+          log.tasks << current_task
+        else
+          current_task.log << "\n" << line
+        end
+      end
+      return log
+    end
+
+    def to_s
+      return @tasks.map(&:to_s).join("\n")
+    end
+  end
+
+  class Task
+    def initialize(date, subject, log)
+      @date = date
+      @subject = subject
+      @log = log
+    end
+
+    attr_accessor :date, :subject, :log
+
+    def to_s
+      return "#{@date} - #{@subject}\n#{@log.strip.lines.map{|line|"    #{line}"}.join()}"
+    end
+  end
+
+  class CLI
+    include Thunder
+
+    def start(*args)
+      load_triage_log(find_triage_log())
+
+      super
+    end
+
+    def load_triage_log(filename)
+      @triage = Log.load(File.read(filename))
+    end
+
+    def find_triage_log
+      [
+        "triage",
+        ".issues/triage",
+      ].each do |candidate|
+        previous = nil
+        current = File.expand_path(".")
+        while true
+          full_path = File.expand_path(candidate, current)
+          return full_path if File.file?(full_path)
+          previous = current
+          current = File.dirname(current)
+          break if current == previous
+        end
+      end
+      [
+        "~/triage",
+        "~/.triage",
+      ].each do |candidate|
+        full_path = File.expand_path(candidate)
+        return full_path if File.exist?(full_path)
+      end
+    end
+
+    desc "what", "show the current issue I'm triaging"
+    def what
+      current_task = @triage.tasks.first
+      if current_task
+        puts current_task.subject
+      end
+    end
+
+    desc "defer", "defer the current task to the end of the list"
+    def defer
+      @triage.tasks.push(@triage.tasks.shift)
+      File.write(find_triage_log(), @triage)
+    end
+
+    desc "all"
+    def all
+      puts @triage.tasks.map(&:subject)
+    end
+
+    desc "add SUBJECT", "add a new task to the list"
+    def add(*subject)
+      new_task = Task.new(Time.now.strftime("%Y%m%d"), subject.join(" "), "")
+      @triage.tasks.unshift(new_task)
+      File.write(find_triage_log(), @triage)
+    end
+
+    desc "log COMMENT", "record a log line for the current task"
+    def log(*comment)
+      current_task = @triage.tasks.first
+      raise "No current task" unless current_task
+      current_task.log << "\n" << comment.join(" ")
+
+      File.write(find_triage_log(), @triage)
+    end
+  end
+end
+
+Triage::CLI.new.start
