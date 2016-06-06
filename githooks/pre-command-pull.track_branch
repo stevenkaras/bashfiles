@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+current_branch="$(git rev-parse --symbolic --abbrev-ref HEAD)"
+current_remote="$(git config branch.${current_branch}.remote)"
+tracking_branch="$(git config branch.${current_branch}.autotracking)"
+
+if [[ -z "$tracking_branch" ]]; then
+	exit 0
+fi
+
+if [[ "$#" -gt 0 ]]; then
+	cat <<USAGE
+There is an auto tracking branch configured for the current branch ($current_branch).
+If you wanted to run git pull to do something special, you should run it as this:
+command git pull $@
+USAGE
+	exit 1
+fi
+
+git fetch "$current_remote" "$tracking_branch" "$current_branch"
+_exit_status=$?
+if [[ $_exit_status != 0 ]]; then
+	echo "Error while fetching commits from remote: $_exit_status"
+	exit $_exit_status
+fi
+
+commit_before_merges="$(git rev-parse HEAD)"
+
+git commit -a -m 'automatic commit of changed files'
+git merge "$current_remote/$current_branch" --no-edit
+_exit_status=$?
+if [[ $_exit_status != 0 ]]; then
+	echo "Error while merging changes from $current_remote/$current_branch: $_exit_status"
+	git merge --abort
+	exit $_exit_status
+fi
+
+git merge "$current_remote/$tracking_branch" --no-ff --no-edit
+_exit_status=$?
+if [[ $_exit_status != 0 ]]; then
+	echo "Error while merging changes from $current_remote/$tracking_branch: $_exit_status"
+	git merge --abort
+	exit $_exit_status
+fi
+
+commit_after_merges="$(git rev-parse HEAD)"
+if [[ "$commit_before_merges" == "$commit_after_merges" ]]; then
+	echo "No changes merged. Nothing to push"
+	exit 1
+fi
+
+next_version="$(git config branch.${current_branch}.nextautotrackingversion)"
+next_version="${next_version:-1}"
+git tag -a -m "version ${next_version} of branch $current_branch tracking $tracking_branch" "$current_branch-$next_version"
+next_version=$(($next_version + 1))
+git config branch.${current_branch}.nextautotrackingversion $next_version
+
+git push "$current_remote" "refs/tags/$current_branch-$(($next_version - 1))" "refs/heads/$current_branch"
+_exit_status=$?
+if [[ $_exit_status != 0 ]]; then
+	echo "Error while merging changes from $current_remote/$tracking_branch: $_exit_status"
+	exit $_exit_status
+fi
+
+# since we did the work, don't let git pull run normally
+exit 1
