@@ -11,8 +11,12 @@ fi
 if [[ "$#" -gt 0 ]]; then
 	cat <<USAGE
 There is an auto tracking branch configured for the current branch ($current_branch).
+
 If you wanted to run git pull to do something special, you should run it as this:
 command git pull $@
+
+But this probably isn't what you wanted to do. To pull changes from $current_remote/$tracking_branch,
+simply run: git pull
 USAGE
 	exit 1
 fi
