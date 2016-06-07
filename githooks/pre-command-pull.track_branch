@@ -35,7 +35,7 @@ git merge "$current_remote/$current_branch" --no-edit
 _exit_status=$?
 if [[ $_exit_status != 0 ]]; then
 	echo "Error while merging changes from $current_remote/$current_branch: $_exit_status"
-	git merge --abort
+	git reset --hard $commit_before_merges
 	exit $_exit_status
 fi
 
@@ -43,7 +43,7 @@ git merge "$current_remote/$tracking_branch" --no-ff --no-edit
 _exit_status=$?
 if [[ $_exit_status != 0 ]]; then
 	echo "Error while merging changes from $current_remote/$tracking_branch: $_exit_status"
-	git merge --abort
+	git reset --hard $commit_before_merges
 	exit $_exit_status
 fi
 
