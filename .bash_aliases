@@ -61,6 +61,7 @@ alias sync_history='history -a; history -c; history -r'
 alias frequent_history='history | cut -c30- | sort | uniq -c | sort -nr | head' # for finding common commands to ignore
 alias htmlmail='python -c '"'"'import cgi,sys; print("<pre>" + cgi.escape(sys.stdin.read()).encode("ascii","xmlcharrefreplace") + "</pre>")'"'"' | mail -E -a "Content-Type: text/html" '
 alias bashquote='python -c "import sys,pipes; print pipes.quote(sys.stdin.readline().strip())"'
+alias pandas_describe='python -c "import pandas,sys; print pandas.DataFrame([float(line.strip()) for line in sys.stdin.readlines()]).describe()"'
 
 function mkcd() {
     mkdir -p $@ && cd $@
