@@ -224,7 +224,7 @@ __git_ps1 ()
 				r="|BISECTING"
 			fi
 
-			b="$(git symbolic-ref HEAD 2>/dev/null)" || {
+			branch_name="$(git symbolic-ref HEAD 2>/dev/null)" || {
 
 			b="$(
 			case "${GIT_PS1_DESCRIBE_STYLE-}" in
@@ -242,6 +242,11 @@ __git_ps1 ()
 				b="unknown"
 				b="($b)"
 			}
+			if [ "true" = "${GIT_PS1_SHOWBRANCH-}" ]; then
+				if [ -n "${branch_name-}" ]; then
+					b="$branch_name"
+				fi
+			fi
 		fi
 
 		local w=""
