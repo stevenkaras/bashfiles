@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+author_info="$(git var GIT_AUTHOR_IDENT)"
+if [[ "$author_info" != *"SHOULD NOT BE USED"* ]]; then
+	# only snark for shared authors
+	exit 0
+fi
+
+# search $@ for --author
+for arg in "$@"; do
+	case "$arg" in
+	--author*)
+		exit 0
+		;;
+	esac
+done
+
+cat >&2 <<HERE
+It seems you want to commit, but the current author identity is a shared author.
+You probably want to set the author information for just this commit:
+
+git commit --author=ME $@
+HERE
+exit 1
