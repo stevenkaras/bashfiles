@@ -30,7 +30,7 @@ fi
 
 commit_before_merges="$(git rev-parse HEAD)"
 
-git commit -a -m 'automatic commit of changed files'
+git commit -a -m 'automatic commit of changed files' --author="$USER <${USER}@$(hostname)>"
 git merge "$current_remote/$current_branch" --no-edit
 _exit_status=$?
 if [[ $_exit_status != 0 ]]; then
