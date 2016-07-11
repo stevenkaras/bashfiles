@@ -1,0 +1,27 @@
+#!/usr/bin/ruby
+
+require 'time'
+
+Messages = <<-MESSAGES.split("\n").map(&:strip)
+The grasshopper lies heavy
+Don't feed the mogwai after midnight
+Drop it like it's hot
+MESSAGES
+
+def main
+  if ARGV == ["-"] || ARGV.size == 0
+    input = STDIN.read
+  else
+    input = ARGV.join(" ")
+  end
+
+  input.chars.map(&:ord).each_slice(4) do |slice|
+    slice << 0 until slice.size == 4
+    slice = slice.pack('CCCC').unpack('N')[0]
+    puts "git commit --allow-empty --date=#{Time.at(slice).iso8601} -m '#{Messages.sample(1)[0]}'"
+  end
+end
+
+if __FILE__ == $PROGRAM_NAME
+  main
+end
