@@ -98,6 +98,11 @@ function gitstat() {
     git log --author=$1 --pretty=tformat: --numstat | awk '{ adds += $1; subs += $2; loc += $1 - $2 } END { printf "added: %s removed: %s total: %s\n",adds,subs,loc }' -
 }
 
+function git-fetch-mirror() {
+    local remote="$1"
+    git ls-remote "$remote" origin/* | cut -d/ -f3- | sed 's/\(.*\)/\1:\1/' | grep -v -e 'HEAD' | xargs git fetch "$remote"
+}
+
 ## Service Development aliases ##
 #################################
 
