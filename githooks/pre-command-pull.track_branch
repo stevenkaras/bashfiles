@@ -34,14 +34,18 @@ commit_before_merges="$(git rev-parse HEAD)"
 git commit -a -m 'automatic commit of changed files' --author="$author"
 
 commit_before_merge_upstream="$(git rev-parse HEAD)"
-git merge "$current_remote/$current_branch" --no-edit
+git merge "$current_remote/$current_branch" --no-edit --ff-only
 _exit_status=$?
 if [[ $_exit_status != 0 ]]; then
-	echo "Error while merging changes from $current_remote/$current_branch: $_exit_status"
-	git reset --hard $commit_before_merges
-	exit $_exit_status
-fi
-if [[ "$(git rev-parse HEAD)" != "$commit_before_merge_upstream" ]]; then
+	# attempt to make the merge as a non-ff merge
+	git merge "$current_remote/$current_branch" --no-edit
+	_exit_status=$?
+	if [[ $_exit_status != 0 ]]; then
+		echo "Error while merging changes from $current_remote/$current_branch: $_exit_status"
+		git reset --hard $commit_before_merge_upstream
+		exit $_exit_status
+	fi
+	# adjust the author of the merge
 	git commit --amend -C HEAD --author="$author"
 fi
 
