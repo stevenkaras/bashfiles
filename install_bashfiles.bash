@@ -22,7 +22,7 @@ function do_ipython_install() {
 		return
 	fi
 
-	for ipython_config_file in "$ROOTDIR/.ipython/*"; do
+	for ipython_config_file in "$ROOTDIR/.ipython/"*; do
 		ln -s -T "$ipython_config_file" "$IPYTHON_PROFILE_DIR/$(basename "$ipython_config_file")" 2>/dev/null
 	done
 }
