@@ -14,6 +14,19 @@ function _platform() {
 	esac
 }
 
+function do_ipython_install() {
+	# determine the folder this script is in
+	local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	local IPYTHON_PROFILE_DIR="$(ipython locate profile)"
+	if [[ $? != 0 ]]; then
+		return
+	fi
+
+	for ipython_config_file in "$ROOTDIR/.ipython/*"; do
+		ln -s -T "$ipython_config_file" "$IPYTHON_PROFILE_DIR/$(basename "$ipython_config_file")" 2>/dev/null
+	done
+}
+
 function do_install() {
 	# determine the folder this script is in
 	local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -49,6 +62,11 @@ function do_install() {
 	for otherfile in .tmux.conf .gitignore_global .vimrc .vim .irbrc .psqlrc .lessfilter .inputrc; do
 		ln -s -T "$ROOTDIR/$otherfile" "$HOME/$otherfile" 2>/dev/null
 	done
+
+	# ipython config installation
+	if type -t ipython >/dev/null; then
+		do_ipython_install
+	fi
 
 	# copy the gitconfig in as a file, not symlinked (because it is expected to change)
 	[[ ! -e "$HOME/.gitconfig" ]] && cp "$ROOTDIR/.gitconfig" "$HOME/.gitconfig"
