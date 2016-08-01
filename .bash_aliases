@@ -103,6 +103,8 @@ function git-fetch-mirror() {
     git ls-remote "$remote" origin/* | cut -d/ -f3- | sed 's/\(.*\)/\1:\1/' | grep -v -e 'HEAD' | xargs git fetch "$remote"
 }
 
+alias trim_trailing_spaces='sed -i -e '"'"'s/[ \t]*$//'"'"''
+
 ## Service Development aliases ##
 #################################
 
