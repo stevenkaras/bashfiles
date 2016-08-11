@@ -115,6 +115,20 @@ class Triage
 
       File.write(find_triage_log(), @triage)
     end
+
+    desc "resolve", "mark the current task as resolved"
+    def resolve
+      triage_file_path = find_triage_log()
+      archive_file = File.expand_path("../.triage/#{Time.now.strftime("%Y%m%d")}", triage_file_path)
+      if File.exists?(archive_file)
+        @resolved = Log.load(File.read(archive_file))
+      else
+        @resolved = Log.new
+      end
+      @resolved.tasks.push(@triage.tasks.shift)
+      File.write(triage_file_path, @triage)
+      File.write(archive_file, @resolved)
+    end
   end
 end
 
