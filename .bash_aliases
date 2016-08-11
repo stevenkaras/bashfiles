@@ -104,6 +104,7 @@ function git-fetch-mirror() {
 }
 
 alias trim_trailing_spaces='sed -i -e '"'"'s/[ \t]*$//'"'"''
+alias rm_conflicts="find . \( -name '*.orig' \) -delete"
 
 ## Service Development aliases ##
 #################################
