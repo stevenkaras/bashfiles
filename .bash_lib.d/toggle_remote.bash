@@ -14,14 +14,19 @@ function toggle_remote() {
 		export VISUAL="vi"
 	}
 
+	local desired=""
 	if [[ $# -eq 1 ]]; then
-		is_remote="$1"
+		desired="$1"
 	else
-		is_remote="$(is_remote && echo "remote")"
+		if is_remote; then
+			desired="remote"
+		else
+			desired="local"
+		fi
 	fi
-	if [[ "$1" == "remote" ]]; then
+	if [[ "$desired" == "remote" ]]; then
 		_setup_remote
-	elif [[ "$1" == "local" ]]; then
+	elif [[ "$desired" == "local" ]]; then
 		_setup_local
 	else
 		echo "USAGE: toggle_remote [local|remote]"
