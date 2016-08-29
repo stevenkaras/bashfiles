@@ -24,7 +24,7 @@ function _is_tty_remote() {
 		fi
 		# this can happen if we've su'd inside tmux, so just assume it's remote
 		return 0
-	elif [[ "$from" =~ ":[[:digit:]]*" ]]; then
+	elif [[ "$from" =~ :[[:digit:]]* ]]; then
 		return 1
 	elif [[ "$from" == "-" ]]; then
 		return 1
