@@ -48,7 +48,12 @@ class Triage
     include Thunder
 
     def start(*args)
-      load_triage_log(find_triage_log())
+      triage_log_path = find_triage_log()
+      if triage_log_path.nil?
+        puts "No triage file found...exiting"
+        exit 1
+      end
+      load_triage_log(triage_log_path)
 
       super
     end
@@ -79,6 +84,7 @@ class Triage
         full_path = File.expand_path(candidate)
         return full_path if File.exist?(full_path)
       end
+      return nil
     end
 
     desc "what", "show the current issue I'm triaging"
