@@ -3,3 +3,7 @@
 "\e[1;5C": forward-word
 "\e[1;9D": backward-word
 "\e[1;9C": forward-word
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+"\e[C": forward-char
+"\e[D": backward-char
