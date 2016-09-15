@@ -1,3 +1,4 @@
+#!/bin/usr/env bash
 
 function notify() {
     osascript -e "display notification \"$*\" with title \"Terminal\""
