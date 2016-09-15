@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO: automatically gitclone my bashfiles if this script is being piped into bash
-
 function _platform() {
 	local kernel="$(uname -s)"
 	case "$kernel" in
@@ -28,6 +26,18 @@ function do_ipython_install() {
 }
 
 function do_install() {
+	# if we're being piped into bash, then clone
+	if [[ ! -t 0 && "$0" == "bash" && -z "$BASH_SOURCE" ]]; then
+		if [[ -e "$HOME/bashfiles" ]]; then
+			echo "$HOME/bashfiles already exists. Perhaps you meant to run $HOME/bashfiles/install_bashfiles.bash?"
+			return 1
+		fi
+		git clone https://github.com/stevenkaras/bashfiles.git "$HOME/bashfiles"
+		[[ $? != 0 ]] && return $?
+		~/bashfiles/install_bashfiles.bash
+		return $?
+	fi
+
 	# determine the folder this script is in
 	local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
