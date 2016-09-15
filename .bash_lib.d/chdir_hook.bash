@@ -9,4 +9,6 @@ function on_chdir() {
         eval $CHDIR_COMMAND
     fi
 }
-PROMPT_COMMAND="on_chdir;${PROMPT_COMMAND}"
+if [[ ! "$PROMPT_COMMAND" == *"on_chdir"* ]]; then
+	export PROMPT_COMMAND="on_chdir;${PROMPT_COMMAND}"
+fi
