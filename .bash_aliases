@@ -57,7 +57,17 @@ alias fucking='sudo'
 alias va='$VISUAL ~/.bash_aliases'
 alias sa='. ~/.bash_aliases'
 alias h?='history | grep'
-alias sync_history='history -a; history -c; history -r'
+function sync_history() {
+    if [[ -f "$1" ]]; then
+        local OLD_HISTFILE="$HISTFILE"
+        HISTFILE="$1"
+        history -r
+        HISTFILE="$OLD_HISTFILE"
+    fi
+    history -a
+    history -c
+    history -r
+}
 alias frequent_history='history | cut -c30- | sort | uniq -c | sort -nr | head' # for finding common commands to ignore
 alias htmlmail='python -c '"'"'import cgi,sys; print("<pre>" + cgi.escape(sys.stdin.read()).encode("ascii","xmlcharrefreplace") + "</pre>")'"'"' | mail -E -a "Content-Type: text/html" '
 alias bashquote='python -c "import sys,pipes; print pipes.quote(sys.stdin.readline().strip())"'
