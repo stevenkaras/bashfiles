@@ -89,6 +89,7 @@ function do_install() {
 
 	# copy the gitconfig in as a file, not symlinked (because it is expected to change)
 	[[ ! -e "$HOME/.gitconfig" ]] && cp "$ROOTDIR/.gitconfig" "$HOME/.gitconfig"
+	return 0
 }
 
 do_install "$@"
