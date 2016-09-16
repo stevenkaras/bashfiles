@@ -60,7 +60,7 @@ function do_install() {
 	fi
 
 	# warn about problematic history declarations in .bashrc, /etc/bash.bashrc, etc
-	for bashfile in "$HOME/.bash_profile" "$HOME/.profile" "$HOME/.bashrc" "/etc/bash.bashrc"; do
+	for bashfile in "$HOME/.bash_profile" "$HOME/.profile" "$HOME/.bashrc" "/etc/bash.bashrc" "/etc/bashrc"; do
 		if [[ -f "$bashfile" ]]; then
 			if grep -e '^[^#]*HISTSIZE=[0-9]' "$bashfile"; then
 				echo "WARNING: $bashfile sets HISTSIZE. This is known to truncate history files even though we set it to unlimited"
