@@ -78,8 +78,12 @@ function authorized_key_ca_stanza() {
 	echo "cert-authority$principals $ca_pub"
 }
 
-function install_on_server() {
-	local server="$1"
+function trust_ca() {
+    local username="${1%@*}"
+    if [[ "$username" == "$1" ]]; then
+        username="$USER"
+    fi
+    local server="${1##*@}"
 	local port="${server##*:}"
 	if [[ "$port" == "$server" ]]; then
 		port="22"
@@ -88,8 +92,16 @@ function install_on_server() {
 	fi
 	shift
 
-	echo "Setting CA as authorized for $username@$server:$port"
-	ssh -p $port "$username@$server" "tee -a \$HOME/.ssh/authorized_keys <<<\"$(authorized_key_ca_stanza "$@")\" >/dev/null"
+	case "$server" in
+		localhost|--local|"")
+			knownhosts_ca_stanza >> "$HOME/.ssh/known_hosts"
+			;;
+		*)
+			echo "Setting CA as authorized for $username@$server:$port"
+			ssh -p $port "$username@$server" "tee -a \$HOME/.ssh/authorized_keys <<<\"$(authorized_key_ca_stanza "$@")\" >/dev/null"
+			;;
+	esac
+
 }
 
 function knownhosts_ca_stanza() {
@@ -152,7 +164,7 @@ function main() {
 			;;
 		install)
 			find_ca_root || exit $?
-			install_on_server "$@"
+			trust_ca "$@"
 			exit $?
 			;;
 		revoke)
