@@ -21,7 +21,7 @@ function do_ipython_install() {
 	fi
 
 	for ipython_config_file in "$ROOTDIR/.ipython/"*; do
-		ln -s -T "$ipython_config_file" "$IPYTHON_PROFILE_DIR/$(basename "$ipython_config_file")" 2>/dev/null
+		ln -s -n "$ipython_config_file" "$IPYTHON_PROFILE_DIR/$(basename "$ipython_config_file")" 2>/dev/null
 	done
 }
 
@@ -42,7 +42,7 @@ function do_install() {
 	local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 	for bashfile in "$ROOTDIR"/.bash*; do
-		ln -s -T "$bashfile" "$HOME/$(basename "$bashfile")" 2>/dev/null
+		ln -s -n "$bashfile" "$HOME/$(basename "$bashfile")" 2>/dev/null
 	done
 	local platform=$(_platform)
 	# inject the bashfiles
@@ -71,15 +71,15 @@ function do_install() {
 	# Setup binary links
 	mkdir -p "$HOME/bin"
 	for binary in "$ROOTDIR"/bin/*; do
-		ln -s -T "$binary" "$HOME/bin/$(basename "$binary")" 2>/dev/null
+		ln -s -n "$binary" "$HOME/bin/$(basename "$binary")" 2>/dev/null
 	done
 	for ssh_binary in "$ROOTDIR"/.ssh/*.bash; do
-		ln -s -T "$ssh_binary" "$HOME/bin/$(basename "${ssh_binary%%.bash}")" 2>/dev/null
+		ln -s -n "$ssh_binary" "$HOME/bin/$(basename "${ssh_binary%%.bash}")" 2>/dev/null
 	done
 
 	# other files to symlink
 	for otherfile in .tmux.conf .gitignore_global .vimrc .vim .irbrc .psqlrc .lessfilter .inputrc; do
-		ln -s -T "$ROOTDIR/$otherfile" "$HOME/$otherfile" 2>/dev/null
+		ln -s -n "$ROOTDIR/$otherfile" "$HOME/$otherfile" 2>/dev/null
 	done
 
 	# ipython config installation
