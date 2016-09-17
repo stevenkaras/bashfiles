@@ -22,9 +22,10 @@ function setup_ca() {
 	ssh-keygen -s "$target/private/ca_key" -z 0 -k -f "$target/krl"
 }
 
-function sign() {
+function sign_key() {
 	local cert_id="$(cat "$SSHCA_ROOT/next_cert_id")"
 	local key_to_sign="$1"
+	shift
 	if [[ ! -f "$key_to_sign" ]]; then
 		echo "$key_to_sign does not exist"
 		return 1
@@ -38,14 +39,51 @@ function sign() {
 		fi
 	fi
 	local key_identity="$(ssh-keygen -l -f "$key_to_sign")"
-	local key_comment="$(echo "$key_identity" | cut -d' ' -f4-)"
-	local cert_path="${1/%.pub/-cert.pub}"
+	# local key_comment="$(echo "$key_identity" | cut -d' ' -f4-)"
+	local cert_path="${key_to_sign/%.pub/-cert.pub}"
 	local cert_name="$(basename "$cert_path")"
-	ssh-keygen -s "$SSHCA_ROOT/private/ca_key" -I "$cert_id-$USER_EMAIL" -z "$cert_id" "$key_to_sign"
+	ssh-keygen -s "$SSHCA_ROOT/private/ca_key" -I "$cert_id-$USER_EMAIL" -z "$cert_id" "$@" "$key_to_sign"
 	[[ $? != 0 ]] && return $?
 	echo $(($cert_id + 1)) > "$SSHCA_ROOT/next_cert_id"
-	echo "$(date -u -Isecond):sign:$cert_id: $key_identity" >> "$SSHCA_ROOT/audit.log"
+	echo "$(date -u +%FT%T%z):sign:$cert_id: $key_identity" >> "$SSHCA_ROOT/audit.log"
 	cp "$cert_path" "$SSHCA_ROOT/certs/${cert_id}-${cert_name}"
+}
+
+function sign_host_key() {
+	local key_to_sign="$1"
+	shift
+	if [[ -f "$key_to_sign" ]]; then
+		sign_key "$key_to_sign" -h "$@"
+	else
+		# assume it's a server
+	    local server="$key_to_sign"
+		local port="${server##*:}"
+		if [[ "$port" == "$server" ]]; then
+			port="22"
+		else
+			server="${server%:*}"
+		fi
+		local server_keys="$(ssh-keyscan -p "$port" "$server" 2>/dev/null)"
+		if [[ $? != 0 ]]; then
+			echo "$key_to_sign is not a file, and ssh-keyscan failed"
+			return 1
+		fi
+		while IFS= read -r server_key; do
+			local key_type="$(cut -d' ' -f 2 <<<"$server_key")"
+			local actual_key="$(cut -d' ' -f2- <<<"$server_key")"
+			local key_file="$server.$key_type.pub"
+			local cert_file="${key_file/%.pub/-cert.pub}"
+			echo "$actual_key" > "$key_file"
+			sign_key "$key_file" -h "$@"
+			if [[ $? != 0 ]]; then
+				echo "failed to sign $key_type from $server"
+				rm "$key_file"
+			else
+				echo "Signed $key_type for $server in $cert_file"
+				echo "You'll need to add HostCertificate /etc/ssh/$cert_file to your sshd_config"
+			fi
+		done <<<"$server_keys"
+	fi
 }
 
 function revoke() {
@@ -58,12 +96,12 @@ function revoke() {
 		else
 			echo "$arg" >> "$SSHCA_ROOT/krl_actions"
 		fi
-		echo "$(date -u -Isecond):revoke: $arg" >> "$SSHCA_ROOT/audit.log"
+		echo "$(date -u +%FT%T%z):revoke: $arg" >> "$SSHCA_ROOT/audit.log"
 	done
 	ssh-keygen -s "$SSHCA_ROOT/private/ca_key" -z "$krl_id" -k -u -f "$SSHCA_ROOT/krl" "$SSHCA_ROOT/krl_actions"
 	[[ $? != 0 ]] && return $?
 	echo $(($krl_id + 1)) > "$SSHCA_ROOT/next_krl_id"
-	echo "$(date -u -Isecond):revoke: updated krl to revision $krl_id" >> "$SSHCA_ROOT/audit.log"
+	echo "$(date -u +%FT%T%z):revoke: updated krl to revision $krl_id" >> "$SSHCA_ROOT/audit.log"
 	rm "$SSHCA_ROOT/krl_actions"
 }
 
@@ -140,9 +178,10 @@ function show_usage() {
 		  $prog setup                                         # perform the initial setup to start acting as a SSH CA
 		  $prog install [USER@]SERVER[:PORT] [PRINCIPALS...]  # install the CA certificate on the given server (limited to certs with the given principals)
 		  $prog sign KEY [-n PRINCIPALS] [OPTIONS]            # sign the given KEY
-		  $prog signhost KEY [OPTION]                         # sign the given host KEY
+		  $prog signhost KEY [-n PRINCIPLES] [OPTIONS]        # sign the given host KEY
 		  $prog revoke CERTS...                               # revoke a certificate
 		  $prog trustconfig [PRINCIPALS [HOSTS]]              # print the config stanzas for trusting keys signed by the CA
+		  $prog implode                                       # delete the CA permanently
 	HELPMESSAGE
 	if [[ "$1" == "-v" || "$1" == "--verbose" ]]; then
 		cat <<-VERBOSEHELP
@@ -174,17 +213,29 @@ function main() {
 			;;
 		sign)
 			find_ca_root || exit $?
-			sign "$@"
+			sign_key "$@"
 			exit $?
 			;;
 		signhost)
 			find_ca_root || exit $?
-			sign -h "$@"
+			sign_host_key "$@"
 			exit $?
 			;;
 		trustconfig)
 			find_ca_root || exit $?
 			trustconfig "$@"
+			exit $?
+			;;
+		selfdestruct|uninstall|implode)
+			find_ca_root || exit $?
+			read -p "About to delete $SSHCA_ROOT. Type yes to continue: "
+			if [[ "$REPLY" == "yes" ]]; then
+				local removal_command="rm"
+				type -t srm >/dev/null 2>&1 && removal_command="srm"
+				"$removal_command" -r "$SSHCA_ROOT"
+			else
+				echo "Not deleting $SSHCA_ROOT"
+			fi
 			exit $?
 			;;
 		-?|-h|--help|help|"")
