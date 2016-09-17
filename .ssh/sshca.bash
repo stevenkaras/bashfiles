@@ -19,6 +19,7 @@ function setup_ca() {
 	ssh-keygen -t rsa -b 4096 -f "$target/private/ca_key" -C "CA by $USER_EMAIL"
 	[[ $? != 0 ]] && return $?
 	cp "$target/private/ca_key.pub" "$target/ca.pub"
+	touch "$target/krl.source"
 	ssh-keygen -s "$target/private/ca_key" -z 0 -k -f "$target/krl"
 }
 
@@ -89,20 +90,18 @@ function sign_host_key() {
 function revoke() {
 	local krl_id="$(cat "$SSHCA_ROOT/next_krl_id")"
 	# first, build the KRL actions
-	truncate --size=0 "$SSHCA_ROOT/krl_actions"
 	for arg in "$@"; do
 		if [[ -f "$arg" ]]; then
-			cat "$arg" >> "$SSHCA_ROOT/krl_actions"
+			cat "$arg" >> "$SSHCA_ROOT/krl.source"
 		else
-			echo "$arg" >> "$SSHCA_ROOT/krl_actions"
+			echo "$arg" >> "$SSHCA_ROOT/krl.source"
 		fi
 		echo "$(date -u +%FT%T%z):revoke: $arg" >> "$SSHCA_ROOT/audit.log"
 	done
-	ssh-keygen -s "$SSHCA_ROOT/private/ca_key" -z "$krl_id" -k -u -f "$SSHCA_ROOT/krl" "$SSHCA_ROOT/krl_actions"
+	ssh-keygen -s "$SSHCA_ROOT/private/ca_key" -z "$krl_id" -k -u -f "$SSHCA_ROOT/krl" "$SSHCA_ROOT/krl.source"
 	[[ $? != 0 ]] && return $?
 	echo $(($krl_id + 1)) > "$SSHCA_ROOT/next_krl_id"
 	echo "$(date -u +%FT%T%z):revoke: updated krl to revision $krl_id" >> "$SSHCA_ROOT/audit.log"
-	rm "$SSHCA_ROOT/krl_actions"
 }
 
 function authorized_key_ca_stanza() {
