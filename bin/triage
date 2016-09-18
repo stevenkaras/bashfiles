@@ -13,13 +13,13 @@ class Triage
     def self.load(file)
       log = self.new()
       current_task = nil
-      file.lines.map(&:strip).each do |line|
-        next if line.empty? && current_task.nil?
+      file.lines.each do |line|
+        next if line.strip.empty? && current_task.nil?
         if line =~ /^(?<date>\d{8}) - (?<subject>.+)$/
           current_task = Task.new($~[:date], $~[:subject], "")
           log.tasks << current_task
         else
-          current_task.log << "\n" << line
+          current_task.log << "\n" << line.rstrip.sub(/^    /, "")
         end
       end
       return log
