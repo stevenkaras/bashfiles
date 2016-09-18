@@ -25,6 +25,18 @@ function do_ipython_install() {
 	done
 }
 
+function remove_broken_symlinks() {
+  local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+  local target="$1"
+
+  for file in "$target/"*; do
+    if [[ -h "$file" && ! -e "$file" ]]; then
+      local symlink_target="$(readlink -n "$file")"
+      [[ "$symlink_target" = "$ROOTDIR"/* ]] && rm "$file"
+    fi
+  done
+}
+
 function do_install() {
 	# if we're being piped into bash, then clone
 	if [[ ! -t 0 && "$0" == "bash" && -z "$BASH_SOURCE" ]]; then
@@ -41,6 +53,7 @@ function do_install() {
 	# determine the folder this script is in
 	local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+	remove_broken_symlinks "$HOME"
 	for bashfile in "$ROOTDIR"/.bash*; do
 		ln -s -n "$bashfile" "$HOME/$(basename "$bashfile")" 2>/dev/null
 	done
@@ -48,11 +61,11 @@ function do_install() {
 	# inject the bashfiles
 	if ! egrep ~/.bashrc -e "(\.|source)\s+('|\")?($HOME|\\\$HOME)/.bashlib" >/dev/null; then
 		cat <<-BASH >> $HOME/.bashrc
-			if [ -f "\$HOME/.bashrc_$platform" ]; then
+			if [[ -f "\$HOME/.bashrc_$platform" ]]; then
 			    . "\$HOME/.bashrc_$platform"
 			fi
 
-			if [ -f "\$HOME/.bashlib" ]; then
+			if [[ -f "\$HOME/.bashlib" ]]; then
 			    . "\$HOME/.bashlib"
 			fi
 			
@@ -70,6 +83,7 @@ function do_install() {
 
 	# Setup binary links
 	mkdir -p "$HOME/bin"
+	remove_broken_symlinks "$HOME/bin"
 	for binary in "$ROOTDIR"/bin/*; do
 		ln -s -n "$binary" "$HOME/bin/$(basename "$binary")" 2>/dev/null
 	done
