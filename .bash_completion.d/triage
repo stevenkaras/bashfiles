@@ -1,0 +1,39 @@
+#!/bin/bash
+
+__triage_completion() {
+    local current_word=${COMP_WORDS[COMP_CWORD]}
+    local previous_word=${COMP_WORDS[COMP_CWORD-1]}
+    local all_words=("${COMP_WORDS[@]}")
+    local which_word=$COMP_CWORD
+    if [[ $current_word == *"="* ]]; then
+        previous_word=${current_word%=*}
+        current_word=${current_word#*=}
+    fi
+
+    local words=""
+    if (($which_word == 1)); then
+        # display only commands
+        words="help what defer all add log resolve"
+    else
+        case ${COMP_WORDS[1]} in
+        help)
+            words="help what defer all add log resolve"
+            ;;
+        what)
+            ;;
+        defer)
+            ;;
+        all)
+            ;;
+        add)
+            ;;
+        log)
+            ;;
+        resolve)
+            ;;
+        esac
+    fi
+    COMPREPLY=($(compgen -W "$words" -- $current_word))
+}
+
+complete -o default -o nospace -F __triage_completion triage
