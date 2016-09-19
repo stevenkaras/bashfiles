@@ -131,14 +131,13 @@ function trust_ca() {
 
 	case "$server" in
 		localhost|--local|"")
-			knownhosts_ca_stanza >> "$HOME/.ssh/known_hosts"
+			knownhosts_ca_stanza "$@" >> "$HOME/.ssh/known_hosts"
 			;;
 		*)
 			echo "Setting CA as authorized for $username@$server:$port"
 			ssh -p $port "$username@$server" "tee -a \$HOME/.ssh/authorized_keys <<<\"$(authorized_key_ca_stanza "$@")\" >/dev/null"
 			;;
 	esac
-
 }
 
 function knownhosts_ca_stanza() {
@@ -177,7 +176,7 @@ function show_usage() {
 		  $prog setup                                         # perform the initial setup to start acting as a SSH CA
 		  $prog install [USER@]SERVER[:PORT] [PRINCIPALS...]  # install the CA certificate on the given server (limited to certs with the given principals)
 		  $prog sign KEY [-n PRINCIPALS] [OPTIONS]            # sign the given KEY
-		  $prog signhost KEY [-n PRINCIPLES] [OPTIONS]        # sign the given host KEY
+		  $prog signhost KEY [-n PRINCIPALS] [OPTIONS]        # sign the given host KEY
 		  $prog revoke CERTS...                               # revoke a certificate
 		  $prog trustconfig [PRINCIPALS [HOSTS]]              # print the config stanzas for trusting keys signed by the CA
 		  $prog implode                                       # delete the CA permanently
