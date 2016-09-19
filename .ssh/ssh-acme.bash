@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+function autosign() {
+	#TODO: need to audit ssh-ca/ssh-keygen for environment variables that may impact security
+	local tmpfile="$(mktemp)" # for printing errors
+
+	local key_to_sign="$1"
+	local cert_path="${key_to_sign/%.pub/-cert.pub}"
+	# remove any previous certificate
+	[[ -e "$cert_path" ]] && rm "$cert_path"
+
+	# clock drift happens, so sign certs to be valid 5 minutes in the past
+	local validity_period="${2:--5m:+1w}"
+
+	SSHCA_ROOT="$HOME/.ssh/ca" "$HOME/bin/ssh-ca" sign "$key_to_sign" -V "$validity_period" >"$tmpfile" 2>&1
+	local exit_code="$?"
+	if [[ "$exit_code" != 0 ]]; then
+		cat "$tmpfile"
+		rm "$tmpfile"
+		return "$exit_code"
+	fi
+	rm "$tmpfile"
+
+	cat "$cert_path"
+}
+
+function trust() {
+	local ACME_ROOT="$SSHCA_ROOT/acme"
+	mkdir -p "$SSHCA_ROOT/acme"
+	cp "$1" "$ACME_ROOT"
+	local key_path="$ACME_ROOT/$(basename "$1")"
+
+	local authorized_keys_prefix='command="$HOME/bin/acme autosign '"$key_path"'"'
+	# the ssh-acme/ssh-ca scripts require a pty...so we can't set no-pty
+	local authorized_keys_options=',no-agent-forwarding,no-port-forwarding,no-user-rc,no-X11-forwarding'
+	local authorized_keys_stanza="${authorized_keys_prefix}${authorized_keys_options} $(cat $key_path)"
+	echo "$authorized_keys_stanza" >> "$HOME/.ssh/authorized_keys"
+	echo "Trusted $(ssh-keygen -l -f "$key_path") to be automatically issued certificates"
+}
+
+function find_ca_root() {
+	if [[ -n "$SSHCA_ROOT" ]]; then
+		return 0
+	fi
+
+	local default="$HOME/.ssh/ca"
+	if [[ -d "$default" ]]; then
+		export SSHCA_ROOT="$default"
+		return 0
+	fi
+
+	echo "SSH CA not set up. Run $(basename "$0") setup"
+	return 1
+}
+
+function show_usage() {
+	local prog="$(basename "$0")"
+	cat <<-HELPMESSAGE
+		  $prog trust KEYFILE                 # Trust a key to be issued certificates automatically
+		  $prog revoke [KEYFILE|FINGERPRINT]  # Revoke a key, so it cannot be issued any more certificates
+	HELPMESSAGE
+	if [[ "$1" == "-v" || "$1" == "--verbose" ]]; then
+		cat <<-VERBOSEHELP
+
+		$prog, along with ssh-ca, allow you to automatically issue SSH certificates
+		VERBOSEHELP
+	fi
+}
+
+function main() {
+	local subcommand="$1"
+	shift
+	case "$subcommand" in
+		autosign)
+			find_ca_root || exit $?
+			autosign "$@"
+			exit $?
+			;;
+		trust)
+			find_ca_root || exit $?
+			trust "$@"
+			exit $?
+			;;
+		revoke)
+			find_ca_root || exit $?
+			revoke "$@"
+			exit $?
+			;;
+		-?|-h|--help|help|"")
+			show_usage "$@"
+			exit $?
+			;;
+		*)
+			echo "Unknown command: $subcommand"
+			echo ""
+			show_usage
+			exit 2
+			;;
+	esac
+}
+
+main "$@"
