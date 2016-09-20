@@ -11,11 +11,17 @@ function setup_ca() {
 			return 1
 		fi
 	fi
+	mkdir -p "$target"
+	chmod 755 "$target"
 	mkdir -p "$target/private"
+	chmod 700 "$target/private"
 	mkdir -p "$target/certs"
 	touch "$target/audit.log"
+	chmod 644 "$target/audit.log"
 	echo "1" > "$target/next_cert_id"
+	chmod 644 "$target/next_cert_id"
 	echo "1" > "$target/next_krl_id"
+	chmod 644 "$target/next_krl_id"
 	ssh-keygen -t rsa -b 4096 -f "$target/private/ca_key" -C "CA by $USER_EMAIL"
 	[[ $? != 0 ]] && return $?
 	cp "$target/private/ca_key.pub" "$target/ca.pub"
