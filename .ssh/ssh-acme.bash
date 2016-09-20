@@ -30,12 +30,50 @@ function trust() {
 	cp "$1" "$ACME_ROOT"
 	local key_path="$ACME_ROOT/$(basename "$1")"
 
+	local fingerprint="$(ssh-keygen -l -f "$key_path")"
+	local exit_code="$?"
+	if [[ "$exit_code" != 0 ]]; then
+		echo "$1 is not a public SSH keyfile"
+		rm "$key_path"
+		return "$exit_code"
+	fi
+
 	local authorized_keys_prefix='command="$HOME/bin/acme autosign '"$key_path"'"'
 	# the ssh-acme/ssh-ca scripts require a pty...so we can't set no-pty
 	local authorized_keys_options=',no-agent-forwarding,no-port-forwarding,no-user-rc,no-X11-forwarding'
 	local authorized_keys_stanza="${authorized_keys_prefix}${authorized_keys_options} $(cat $key_path)"
 	echo "$authorized_keys_stanza" >> "$HOME/.ssh/authorized_keys"
-	echo "Trusted $(ssh-keygen -l -f "$key_path") to be automatically issued certificates"
+	echo "$(date -u +%FT%T%z):acme-trust: $fingerprint" >> "$SSHCA_ROOT/audit.log"
+	echo "Trusted $fingerprint to be automatically issued certificates"
+}
+
+function revoke() {
+	local ACME_ROOT="$SSHCA_ROOT/acme"
+	mkdir -p "$SSHCA_ROOT/acme"
+	local key_to_revoke="$1"
+	local fingerprint="$1"
+	if [[ -e "$1" ]]; then
+		local fingerprint="$(ssh-keygen -l -f "$key_to_revoke")"
+		local exit_code="$?"
+		if [[ "$exit_code" != 0 ]]; then
+			echo "$key_to_revoke is not a public SSH keyfile"
+			return "$exit_code"
+		fi
+		fingerprint="$(echo "$fingerprint" | cut -d' ' -f2)"
+	fi
+
+	local authorized_keys="$HOME/.ssh/authorized_keys"
+	while read -r line; do
+		line="${line/#*ssh/ssh}"
+        if [[ -n "$line" && ${line###} == "$line" ]]; then
+            local fingerprint="$(ssh-keygen -l -f /dev/stdin <<<"$line" | cut -d ' ' -f2)"
+            if [[ "$fingerprint" != "$key_to_revoke" ]]; then
+                echo "$line"
+            fi
+        else
+            echo "$line"
+        fi
+	done
 }
 
 function find_ca_root() {
@@ -49,7 +87,7 @@ function find_ca_root() {
 		return 0
 	fi
 
-	echo "SSH CA not set up. Run $(basename "$0") setup"
+	echo "SSH CA not set up"
 	return 1
 }
 
