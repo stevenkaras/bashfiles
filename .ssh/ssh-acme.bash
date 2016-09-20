@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 function autosign() {
+	local tmpfile
 	#TODO: need to audit ssh-ca/ssh-keygen for environment variables that may impact security
-	local tmpfile="$(mktemp)" # for printing errors
+	tmpfile="$(mktemp)" # for printing errors
+	[[ $? != 0 ]] && return 1
 
 	local key_to_sign="$1"
 	local cert_path="${key_to_sign/%.pub/-cert.pub}"
@@ -30,7 +32,8 @@ function trust() {
 	cp "$1" "$ACME_ROOT"
 	local key_path="$ACME_ROOT/$(basename "$1")"
 
-	local fingerprint="$(ssh-keygen -l -f "$key_path")"
+	local fingerprint
+	fingerprint="$(ssh-keygen -l -f "$key_path")"
 	local exit_code="$?"
 	if [[ "$exit_code" != 0 ]]; then
 		echo "$1 is not a public SSH keyfile"
@@ -38,7 +41,7 @@ function trust() {
 		return "$exit_code"
 	fi
 
-	local authorized_keys_prefix='command="$HOME/bin/acme autosign '"$key_path"'"'
+	local authorized_keys_prefix='command="$HOME/bin/ssh-acme autosign '"$key_path"'"'
 	# the ssh-acme/ssh-ca scripts require a pty...so we can't set no-pty
 	local authorized_keys_options=',no-agent-forwarding,no-port-forwarding,no-user-rc,no-X11-forwarding'
 	local authorized_keys_stanza="${authorized_keys_prefix}${authorized_keys_options} $(cat $key_path)"
@@ -48,12 +51,16 @@ function trust() {
 }
 
 function revoke() {
+	local tmpfile
+	tmpfile="$(mktemp)"
+	[[ $? != 0 ]] && return 1
+
 	local ACME_ROOT="$SSHCA_ROOT/acme"
 	mkdir -p "$SSHCA_ROOT/acme"
 	local key_to_revoke="$1"
 	local fingerprint="$1"
-	if [[ -e "$1" ]]; then
-		local fingerprint="$(ssh-keygen -l -f "$key_to_revoke")"
+	if [[ -e "$key_to_revoke" ]]; then
+		fingerprint="$(ssh-keygen -l -f "$key_to_revoke")"
 		local exit_code="$?"
 		if [[ "$exit_code" != 0 ]]; then
 			echo "$key_to_revoke is not a public SSH keyfile"
@@ -62,18 +69,31 @@ function revoke() {
 		fingerprint="$(echo "$fingerprint" | cut -d' ' -f2)"
 	fi
 
+	# remove the key with the fingerprint from the authorized keys
 	local authorized_keys="$HOME/.ssh/authorized_keys"
 	while read -r line; do
-		line="${line/#*ssh/ssh}"
-        if [[ -n "$line" && ${line###} == "$line" ]]; then
-            local fingerprint="$(ssh-keygen -l -f /dev/stdin <<<"$line" | cut -d ' ' -f2)"
-            if [[ "$fingerprint" != "$key_to_revoke" ]]; then
-                echo "$line"
-            fi
-        else
-            echo "$line"
-        fi
+		local filtered_line="${line/#*ssh/ssh}"
+		filtered_line="${filtered_line%%#*}"
+		if [[ -n "$filtered_line" ]]; then
+			echo "$filtered_line" >"$tmpfile"
+			local stored_fingerprint="$(ssh-keygen -l -f "$tmpfile" | cut -d' ' -f2)"
+			if [[ "$stored_fingerprint" != "$fingerprint" ]]; then
+				echo "$line"
+			fi
+		else
+			echo "$line"
+		fi
+	done < "$authorized_keys" > "$authorized_keys.new"
+	mv "$authorized_keys.new" "$authorized_keys"
+
+	# delete the stored keyfile
+	for stored_keyfile in "$ACME_ROOT/"*; do
+		local stored_fingerprint
+		stored_fingerprint="$(ssh-keygen -l -f "$stored_keyfile" | cut -d' ' -f2)"
+		[[ "$stored_fingerprint" == "$fingerprint" ]] && rm "$stored_keyfile"
 	done
+	echo "$(date -u +%FT%T%z):acme-revoke: $fingerprint" >> "$SSHCA_ROOT/audit.log"
+	echo "$fingerprint has been revoked and will not be issued any new certificates"
 }
 
 function find_ca_root() {
