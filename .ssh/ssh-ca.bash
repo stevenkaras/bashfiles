@@ -71,23 +71,26 @@ function sign_host_key() {
 			server="${server%:*}"
 		fi
 		local server_keys="$(ssh-keyscan -p "$port" "$server" 2>/dev/null)"
-		if [[ $? != 0 ]]; then
-			echo "$key_to_sign is not a file, and ssh-keyscan failed"
+		if [[ -z "$server_keys" ]]; then
+			echo "$key_to_sign is not a public key file, and ssh-keyscan failed"
 			return 1
 		fi
+		local server_key
 		while IFS= read -r server_key; do
-			local key_type="$(cut -d' ' -f 2 <<<"$server_key")"
-			local actual_key="$(cut -d' ' -f2- <<<"$server_key")"
-			local key_file="$server.$key_type.pub"
-			local cert_file="${key_file/%.pub/-cert.pub}"
-			echo "$actual_key" > "$key_file"
-			sign_key "$key_file" -h "$@"
-			if [[ $? != 0 ]]; then
-				echo "failed to sign $key_type from $server"
-				rm "$key_file"
-			else
-				echo "Signed $key_type for $server in $cert_file"
-				echo "You'll need to add HostCertificate /etc/ssh/$cert_file to your sshd_config"
+			if [[ -n "$server_key" ]]; then
+				local key_type="$(cut -d' ' -f 2 <<<"$server_key")"
+				local actual_key="$(cut -d' ' -f2- <<<"$server_key")"
+				local key_file="$server.$key_type.pub"
+				local cert_file="${key_file/%.pub/-cert.pub}"
+				echo "$actual_key" > "$key_file"
+				sign_key "$key_file" -h "$@"
+				if [[ $? != 0 ]]; then
+					echo "failed to sign $key_type from $server"
+					rm "$key_file"
+				else
+					echo "Signed $key_type for $server in $cert_file"
+					echo "You'll need to add HostCertificate /etc/ssh/$cert_file to your sshd_config"
+				fi
 			fi
 		done <<<"$server_keys"
 	fi
