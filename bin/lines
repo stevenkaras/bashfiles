@@ -1,0 +1,334 @@
+#!/usr/bin/env ruby
+
+class Spec
+  Grammar = %r{
+    (?<root> \g<linespec> ){0}
+
+    (?<linespec>
+      \g<single_line_spec> |
+      (?<line_start>\g<number>)?(?:(?::|-)(?<line_end>\g<number>)? |
+      \+(?<line_count>\g<number>))
+    ){0}
+    (?<single_line_spec> \g<number> ){0}
+
+    (?<number> -?\d+ ){0}
+
+    \A\g<root>\Z
+  }x
+
+  def self.from_string(spec)
+    match_data = Grammar.match(spec)
+    raise "Invalid spec #{spec}" unless match_data
+    # puts "match_data=#{match_data.inspect}"
+    line_start = match_data[:line_start]
+    line_start = 0 if line_start.nil?
+    line_start = line_start.to_i
+    line_count = match_data[:line_count]
+    if line_count
+      line_count = line_count.to_i
+      if line_count < 0
+        line_end = line_start
+        line_start = line_end + line_count
+      else
+        line_end = line_start + line_count
+      end
+    else
+      line_end = match_data[:line_end]
+      line_end = -1 if line_end.nil?
+      line_end = line_end.to_i
+    end
+    single_line_spec = match_data[:single_line_spec]
+    if single_line_spec
+      line_start = single_line_spec.to_i
+      line_end = line_start
+      if line_start < 0
+        raise "Ambiguous spec. Please use either `:#{line_start}` or `#{line_start}+0`"
+      end
+    end
+    return Spec.new(line_start, line_end)
+  end
+
+  def initialize(line_start, line_end)
+    @line_start = line_start
+    @line_end = line_end
+  end
+
+  attr_accessor :line_start, :line_end
+end
+
+require 'minitest'
+
+class TestSpec < Minitest::Test
+  def line_spec_tester(spec, line_start, line_end)
+    spec_object = Spec.from_string(spec)
+    assert_equal line_start, spec_object.line_start, "provided spec: #{spec}. start: #{spec_object.line_start}, end: #{spec_object.line_end}"
+    assert_equal line_end, spec_object.line_end, "provided spec: #{spec}. start: #{spec_object.line_start}, end: #{spec_object.line_end}"
+  end
+
+  def test_simple_specs
+    line_spec_tester("1:4", 1, 4)
+    line_spec_tester("1:", 1, -1)
+    line_spec_tester("4:", 4, -1)
+    line_spec_tester(":4", 0, 4)
+    line_spec_tester(":", 0, -1)
+
+    line_spec_tester("1-4", 1, 4)
+    line_spec_tester("1-", 1, -1)
+    line_spec_tester("4-", 4, -1)
+    # line_spec_tester("-4", 0, 4) # this use case is ambiguous, and is disallowed at the spec level
+    assert_raises { Spec.from_string("-4") }
+    line_spec_tester("-", 0, -1)
+  end
+
+  def test_negative_specs
+    line_spec_tester("8:-2", 8, -2)
+    line_spec_tester("2:-2", 2, -2)
+    line_spec_tester("-4:8", -4, 8)
+    line_spec_tester("-4:-2", -4, -2)
+    line_spec_tester("-4:", -4, -1)
+    line_spec_tester(":-2", 0, -2)
+    line_spec_tester("2:-2", 2, -2)
+
+    line_spec_tester("8--2", 8, -2)
+    line_spec_tester("-4-8", -4, 8)
+    line_spec_tester("-4--2", -4, -2)
+    line_spec_tester("-4-", -4, -1)
+    line_spec_tester("--2", 0, -2)
+  end
+
+  def test_counting_specs
+    line_spec_tester("3+2", 3, 5)
+    line_spec_tester("-3+2", -3, -1)
+    line_spec_tester("-3+0", -3, -3)
+  end
+
+  def test_single_line_specs
+    line_spec_tester("3", 3, 3)
+    # line_spec_tester("-3", -3, -3) # this use case is ambiguous, and is disallowed at the spec level
+    assert_raises { Spec.from_string("-3") }
+  end
+end
+
+class SpecList
+  def initialize(specs)
+    @specs = specs.map { |spec| Spec.from_string(spec) }
+    @buffer_size = needed_buffer()
+    @max_line = @specs.max_by(&:line_end).line_end
+    @max_line = nil if @specs.any?{|spec| spec.line_end < 0}
+  end
+
+  attr_accessor :buffer_size, :max_line
+
+  def needed_buffer
+    start_min = @specs.min_by(&:line_start).line_start
+    needed_buffer = [start_min, @specs.min_by(&:line_end).line_end].min
+    needed_buffer = 0 if needed_buffer >= 0
+    needed_buffer *= -1
+    needed_buffer += 1 if needed_buffer != 0
+    return needed_buffer
+  end
+
+  def match_specs(line_no, out_of)
+    matching_specs = @specs.select do |spec|
+      next if out_of.nil? && ( spec.line_start < 0 || spec.line_end < 0 )
+      next if out_of < 0 && spec.line_start < 0
+      out_of_at_least = out_of.abs
+
+      result = if spec.line_start < 0
+        spec.line_start <= (line_no - out_of_at_least)
+      else
+        spec.line_start <= line_no
+      end
+
+      result &&= if spec.line_end < 0
+        spec.line_end >= (line_no - out_of_at_least)
+      else
+        spec.line_end >= line_no
+      end
+
+      result
+    end
+    return matching_specs
+  end
+
+  def emit_line(line, output, matching_specs)
+    output << line
+  end
+
+  def process(input, output = STDOUT, strictly_order: false)
+    buffer = []
+    stream_size = 0
+    input.each_line.with_index do |line, line_number|
+      line_number += 1
+      stream_size += 1
+      break if @max_line && line_number > @max_line
+
+      # first, determine which specs match the current line number
+      if strictly_order
+        buffer << line
+        next if buffer.size <= @buffer_size
+        line_no_under_consideration = line_number - @buffer_size
+        line_to_emit = buffer.shift
+      else
+        line_no_under_consideration = line_number
+        line_to_emit = line
+      end
+
+      matching_specs = match_specs(line_no_under_consideration, -(line_no_under_consideration + @buffer_size))
+
+      unless matching_specs.empty?
+        emit_line(line_to_emit, output, matching_specs)
+      end
+    end
+
+    # output the rest of the lines left in the buffer, if need be
+    buffer.each.with_index do |line, buffer_line_number|
+      line_number = stream_size - @buffer_size + buffer_line_number
+      line_number += 1
+      matching_specs = match_specs(line_number, stream_size)
+      unless matching_specs.empty?
+        emit_line(line, output, matching_specs)
+      end
+    end
+  end
+end
+
+class TestSpecList < Minitest::Test
+  self.make_my_diffs_pretty!
+
+  def test_detects_constraints_correctly
+    list = SpecList.new(["1-4", "6-8"])
+    assert_equal 0, list.needed_buffer
+    assert_equal 8, list.max_line
+
+    list = SpecList.new(["1-4", "6-"])
+    assert_equal 2, list.needed_buffer
+    assert_equal nil, list.max_line
+  end
+
+  def test_match_specs_works_simple_specs
+    list = SpecList.new(["1-3", "5-6", "9-10"])
+    cases = {
+      1 => true,
+      2 => true,
+      3 => true,
+      4 => false,
+      5 => true,
+      6 => true,
+      7 => false,
+      8 => false,
+      9 => true,
+    }
+    cases.each do |line_no, expected|
+      matching_specs = list.match_specs(line_no, -line_no)
+      assert_equal expected, !matching_specs.empty?, "line #{line_no}. Expected: #{expected}. Matched: #{matching_specs.inspect}"
+    end
+  end
+
+  def test_match_specs_works_negative_specs
+    list = SpecList.new(["7:-2", "-9:-8", "-6:5"])
+    cases = {
+      1 => true,
+      2 => true,
+      3 => false,
+      4 => true,
+      5 => true,
+      6 => false,
+      7 => true,
+      8 => true,
+      9 => false,
+      10 => false,
+    }
+    cases.each do |line_no, expected|
+      matching_specs = list.match_specs(line_no, cases.size)
+      assert_equal expected, !matching_specs.empty?, "line #{line_no}. Expected: #{expected}. Matched: #{matching_specs.inspect}"
+    end
+  end
+
+  def process_input_tester(list, expected, strictly_order: false)
+    input = (1..expected.size).to_a.map(&:to_s).join("\n")
+    output = []
+    list.process(input, output, strictly_order: strictly_order)
+    actual = output.map do |line|
+      [line.to_i, true]
+    end.to_h
+    (1...expected.size).each do |line_no|
+      assert_equal expected[line_no], actual[line_no] || false, "testing line ##{line_no}"
+    end
+  end
+
+  def test_process_simple_case
+    list = SpecList.new(["1-4"])
+    process_input_tester(list, {
+      1 => true,
+      2 => true,
+      3 => true,
+      4 => true,
+      5 => false,
+      6 => false,
+      7 => false,
+      8 => false,
+      9 => false,
+      10 => false,
+    })
+    list = SpecList.new(["1-2", "4-6", "8-9"])
+    process_input_tester(list, {
+      1 => true,
+      2 => true,
+      3 => false,
+      4 => true,
+      5 => true,
+      6 => true,
+      7 => false,
+      8 => true,
+      9 => true,
+      10 => false,
+    })
+  end
+
+  def test_process_strict_ordering
+    list = SpecList.new(["2-3"])
+    process_input_tester(list, {
+      1 => false,
+      2 => true,
+      3 => true,
+      4 => false,
+      5 => false,
+      6 => false,
+    }, strictly_order: true)
+  end
+
+  def test_process_strict_with_buffer
+    list = SpecList.new(["2:-2"])
+    process_input_tester(list, {
+      1 => false,
+      2 => true,
+      3 => true,
+      4 => false,
+      5 => false,
+    }, strictly_order: true)
+  end
+end
+
+if __FILE__ == $PROGRAM_NAME
+  require 'optparse'
+
+  options = {}
+  OptionParser.new do |opts|
+    opts.banner = "Usage: #{Process.argv0} [ROWSPEC]"
+
+    opts.on("--test", "Run self-tests") do |test|
+      options[:self_test] = test
+    end
+  end.parse!
+
+  if options[:self_test]
+    require 'minitest/autorun'
+    exit 0 # TODO: exit with the correct code if the tests passed or not
+  end
+  ARGV << "1:" if ARGV.empty?
+
+  list = SpecList.new(ARGV)
+  #open stdin, read lines and emit them according to the spec
+  list.process(STDIN, STDOUT)
+end
