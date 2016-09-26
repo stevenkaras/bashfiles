@@ -12,8 +12,10 @@ def elapsed(f):
     """
     from datetime import datetime
     start = datetime.utcnow()
-    f()
-    print('elapsed: %f' % (datetime.utcnow() - start).total_seconds())
+    try:
+        f()
+    finally:
+        print('elapsed: %f' % (datetime.utcnow() - start).total_seconds())
 
 
 def histtime(f, time=5.0):
