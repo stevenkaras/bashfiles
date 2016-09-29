@@ -131,7 +131,9 @@ class Triage
       else
         @resolved = Log.new
       end
-      @resolved.tasks.push(@triage.tasks.shift)
+      task = @triage.tasks.shift
+      task.log << "\n" << "Marked as resolved at #{Time.now.strftime("%Y%m%d %H:%M:%S")}"
+      @resolved.tasks.push(task)
       File.write(triage_file_path, @triage)
       File.write(archive_file, @resolved)
     end
