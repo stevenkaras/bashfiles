@@ -15,6 +15,6 @@ function test_patterns() {
     echo " 1%%x*  = ${1%%x*}"
 }
 
-for teststring in $@; do
-    test_patterns $teststring
+for teststring in "$@"; do
+    test_patterns "$teststring"
 done
