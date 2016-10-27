@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+if [[ "$#" -gt 0 ]]; then
+	command git push "$@"
+	exit "$?"
+fi
+
+if command git push; then
+	exit 0
+fi
+
+#TODO: only retry if the push failed because the remote has a different HEAD
+
+# attempt to pull and push again
+git pull && command git push
