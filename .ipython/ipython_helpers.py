@@ -1,4 +1,22 @@
 
+def stacktrace(thread):
+    import threading
+    if isinstance(thread, threading.Thread):
+        tid = thread.ident
+    elif isinstance(thread, (int,long,)):
+        tid = thread
+    else:
+        return
+
+    import sys
+    frame = sys._current_frames()[tid]
+    if not frame:
+        return
+
+    import traceback
+    traceback.print_stack(frame)
+
+
 def common_apis(*args):
     """
     Find a common subset of public attributes between all the given args
