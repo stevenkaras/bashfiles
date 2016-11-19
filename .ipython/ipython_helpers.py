@@ -55,7 +55,7 @@ def histtime(f, time=5.0):
         prev = start
         start = datetime.utcnow()
         times.append((start - prev).total_seconds())
-    print pandas.Series(times).describe(percentiles = [ 0.25, 0.5, 0.75, 0.9, 0.95, 0.99, 0.999 ])
+    print(pandas.Series(times).describe(percentiles = [ 0.25, 0.5, 0.75, 0.9, 0.95, 0.99, 0.999 ]))
 
 
 def get_exception(f):
