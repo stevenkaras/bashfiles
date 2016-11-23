@@ -11,14 +11,14 @@ def main():
 
     # check the template string first
     expected_template_args = {
-        'full': None,
-        'short': None,
-        'count': None,
-        'mean': None,
-        'std': None,
-        'min': None,
-        'max': None,
-        'sum': None,
+        'full': '',
+        'short': '',
+        'count': 0.0,
+        'mean': 0.0,
+        'std': 0.0,
+        'min': 0.0,
+        'max': 0.0,
+        'sum': 0.0,
     }
     for ile in [ 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99 ]:
         ile *= 100
