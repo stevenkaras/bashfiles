@@ -3,7 +3,7 @@
 import sys
 import pandas
 
-def render_for_data(data):
+def render_for_data(data, template):
     series = pandas.Series(data)
     description = series.describe(percentiles = [ 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99 ])
     template_args = description.to_dict()
@@ -19,8 +19,8 @@ def main():
         template = ' '.join(sys.argv[1:])
 
     # fail fast if the template string isn't a good one
-    _ = render_for_data([1, 2, 3.4])
-    print(render_for_data([float(line.strip()) for line in sys.stdin.readlines()]))
+    _ = render_for_data([1, 2, 3.4], template)
+    print(render_for_data([float(line.strip()) for line in sys.stdin.readlines()], template))
 
 if __name__ == '__main__':
     sys.exit(main() or 0)
