@@ -3,36 +3,24 @@
 import sys
 import pandas
 
+def render_for_data(data):
+    series = pandas.Series(data)
+    description = series.describe(percentiles = [ 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99 ])
+    template_args = description.to_dict()
+    template_args['full'] = str(description)
+    template_args['short'] = str(series.describe(percentiles = [0.5, 0.75, 0.9, 0.95, 0.99]))
+    template_args['sum'] = series.sum()
+    return template.format(**template_args)
+
 def main():
     if len(sys.argv) == 1:
         template = '{short}'
     else:
         template = ' '.join(sys.argv[1:])
 
-    # check the template string first
-    expected_template_args = {
-        'full': '',
-        'short': '',
-        'count': 0.0,
-        'mean': 0.0,
-        'std': 0.0,
-        'min': 0.0,
-        'max': 0.0,
-        'sum': 0.0,
-    }
-    for ile in [ 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99 ]:
-        ile *= 100
-        expected_template_args['%d%%' % ile] = None
-    _ = template.format(**expected_template_args)
-
-    series = pandas.Series([float(line.strip()) for line in sys.stdin.readlines()])
-    description = series.describe(percentiles = [ 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99 ])
-    template_args = description.to_dict()
-    template_args['full'] = str(description)
-    template_args['short'] = str(series.describe(percentiles = [0.5, 0.75, 0.9, 0.95, 0.99]))
-    template_args['sum'] = series.sum()
-
-    print(template.format(**template_args))
+    # fail fast if the template string isn't a good one
+    _ = render_for_data([1, 2, 3.4])
+    print(render_for_data([float(line.strip()) for line in sys.stdin.readlines()]))
 
 if __name__ == '__main__':
     sys.exit(main() or 0)
