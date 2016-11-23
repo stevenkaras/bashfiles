@@ -4,15 +4,33 @@ import sys
 import pandas
 
 def main():
-    series = pandas.Series([float(line.strip()) for line in sys.stdin.readlines()])
-    description = series.describe(percentiles = [ 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99, 0.999 ])
-    template_args = description.to_dict()
-    template_args['full'] = str(description)
-
     if len(sys.argv) == 1:
-        template = '{full}'
+        template = '{short}'
     else:
         template = ' '.join(sys.argv[1:])
+
+    # check the template string first
+    expected_template_args = {
+        'full': None,
+        'short': None,
+        'count': None,
+        'mean': None,
+        'std': None,
+        'min': None,
+        'max': None,
+        'sum': None,
+    }
+    for ile in [ 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99 ]:
+        ile *= 100
+        expected_template_args['%d%%' % ile] = None
+    _ = template.format(**expected_template_args)
+
+    series = pandas.Series([float(line.strip()) for line in sys.stdin.readlines()])
+    description = series.describe(percentiles = [ 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99 ])
+    template_args = description.to_dict()
+    template_args['full'] = str(description)
+    template_args['short'] = str(series.describe(percentiles = [0.5, 0.75, 0.9, 0.95, 0.99]))
+    template_args['sum'] = series.sum()
 
     print(template.format(**template_args))
 
