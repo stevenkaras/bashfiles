@@ -20,5 +20,5 @@ export HISTFILE="$HOME/.bash_history.d/$USER@$HOSTNAME.history"
 export HISTIGNORE="ll:ls:bg:fg:pwd:date"
 
 if [[ ! "$PROMPT_COMMAND" == *"history -a"* ]]; then
-	PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND;}history -a; history -c; history -r"
+	PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }history -a; history -c; history -r"
 fi
