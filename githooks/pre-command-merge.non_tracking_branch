@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+current_branch="$(git rev-parse --symbolic --abbrev-ref HEAD)"
+current_remote="$(git config branch.${current_branch}.remote)"
+
+tracking_branch="$(git show ${current_branch}:.gittracking 2>/dev/null)"
+if [[ $? != 0 ]]; then
+	tracking_branch="$(git config branch.${current_branch}.autotracking)"
+fi
+
+if [[ -z "$tracking_branch" ]]; then
+	exit 0
+fi
+
+for arg in "$@"; do
+	if [[ "$arg" == *"$tracking_branch" ]]; then
+		exit 0
+	fi
+done
+
+cat <<USAGE
+There is an auto tracking branch configured for the current branch ($current_branch).
+
+If you wanted to merge in a different branch to do something special, you should run it as this:
+command git merge $@
+
+But this probably isn't what you wanted to do. To merge changes from $tracking_branch, run:
+git merge $tracking_branch
+USAGE
+exit 1
