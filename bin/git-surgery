@@ -1,0 +1,144 @@
+#!/usr/bin/env ruby
+
+require 'open3'
+require 'fileutils'
+require 'thunder'
+
+# Some guidance taken from
+# https://www.kernel.org/pub/software/scm/git/docs/v1.7.10.1/howto/recover-corrupted-blob-object.txt
+
+# for each corrupt packfile:
+#   #rename the packfile
+#   mv $packfile $packfile.corrupted
+#   #unpack as many objects as possible from the packfile
+#   git unpack-objects -r < $packfile.corrupted
+#   rm -f $packfile.corrupted
+# for each missing blob:
+#   #pull in from the "closest" git remote
+#   ssh $remote 'cd $path && git cat-file blob $blob' | git hash-object -w --stdin
+# verify the integrity of the repo
+
+class GitSurgery
+  include Thunder
+
+  default_command :surgery
+
+  desc "surgery", "Automatically fix corrupt packfiles"
+  def surgery
+    # diagnose the issue (find any corrupt packfiles)
+    packfiles = corrupt_packfiles
+    unpack_packfile(packfiles)
+    # unpack as many objects as possible from the packfile
+    fix_missing_blob
+    # find any missing blobs
+    # fetch the blobs from the remotes (maybe include a network distance for the remotes?)
+  end
+
+  def corrupt_packfiles
+    fsck_result, _ = Open3.capture2e("git fsck --strict --full --no-dangling")
+    packfiles = fsck_result.lines.reduce([]) do |result, line|
+      case line
+      when /^error: packfile (.*) does not match index/
+        packfile = $~[1]
+        result << packfile
+      end
+      result
+    end
+    return packfiles.sort.uniq
+  end
+
+  def unpack_packfile(packfiles)
+    packfiles.each do |packfile|
+      puts "unpacking #{packfile}"
+      spawn("git unpack-objects", in: packfile, out: "/dev/null", err: [:child, :out])
+      FileUtils.rm(packfile, force: true)
+    end
+  end
+
+  def fix_missing_blob
+    fsck_result, _ = Open3.capture2e("git fsck --strict --full --connectivity-only")
+    fsck_result.lines.each do |line|
+      case line
+      when /missing blob (.*)/
+        fetch_remote_blob($~[1])
+      end
+    end
+  end
+  
+  desc "fetch_remote_blob"
+  def fetch_remote_blob(blob)
+    remotes.each do |name, spec|
+      begin
+        case spec[:fetch_url]
+        when /^ssh:\/\/([^@]*)@([^\/]*)\/(.*)$/
+          user, host, path = $~.captures
+          fetch_via_ssh(user, host, path, blob)
+        when /^git:\/\/([^\/]*)\/(.*)$/
+          host, path = $~.captures
+          fetch_via_git(host, path, blob)
+        when /^([^@:]*)@([^:]*):(.*)$/
+          user, host, path = $~.captures
+          fetch_via_ssh(user, host, path, blob)
+        when /^https?:\/\/(.*)$/
+          # try to git fetch the remote blob
+          fetch_via_http(spec[:fetch_url], blob)
+        when /^file:\/\/(.*)$/
+          path = $~[1]
+          fetch_via_file(path, blob)
+        else
+          # assume it's a path
+          fetch_via_file(spec[:fetch_url], blob)
+        end
+        return true
+      rescue
+        # NOP
+      end
+    end
+    return false
+  end
+
+  def fetch_via_ssh(user, host, path, blob)
+    ssh_command = "ssh #{user}@#{host} 'cd #{path} && git cat-file blob #{blob}'"
+    git_hash_object_command = "git hash-object -w --stdin"
+    Open3.pipeline(ssh_command, git_hash_object_command, out: "/dev/null")
+  end
+
+  def fetch_via_git(host, path, blob)
+    raise NotImplementedError
+  end
+
+  def fetch_via_file(path, blob)
+    puts "fetching #{blob} from #{path}"
+    git_cat_file_command = "git -C #{path} cat-file blob #{blob}"
+    git_hash_object_command = "git hash-object -w --stdin"
+    Open3.pipeline(git_cat_file_command, git_hash_object_command, out: "/dev/null")
+  end
+
+  def fetch_via_http(url, blob)
+    raise NotImplementedError
+  end
+
+  def fetch_via_ftp(url, blob)
+    raise NotImplementedError
+  end
+
+  def remotes
+    return @remotes if @remotes
+    @remotes = {}
+    `git remote -v show`.split("\n").each do |remotespec|
+      match = /(?<remote_name>\S+)\s+(?<remote_url>.+) \((?<url_type>fetch|push)\)/.match(remotespec)
+      puts remotespec unless match
+      next unless match
+      @remotes[match[:remote_name]] ||= {}
+      case match[:url_type]
+      when "fetch"
+        @remotes[match[:remote_name]][:fetch_url] = match[:remote_url]
+      when "push"
+        @remotes[match[:remote_name]][:push_url] = match[:remote_url]
+      end
+    end
+    return @remotes
+  end
+end
+
+GitSurgery.new.start
