@@ -41,8 +41,9 @@ function push_all() {
 function compile_file() {
 	local TMPFILE="$(mktemp)"
 	local source_file="$1"
-
-	m4 <"$source_file" >"$TMPFILE"
+	pushd "$(dirname "$source_file")"
+	m4 <"$(basename "$source_file")" >"$TMPFILE"
+	popd
 	echo "$TMPFILE"
 }
 
