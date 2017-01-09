@@ -122,6 +122,12 @@ class Triage
       File.write(find_triage_log(), @triage)
     end
 
+    desc "swap", "swap the first two tasks in the list"
+    def swap
+      @triage.tasks[0..1] = @triage.tasks[0..1].reverse
+      File.write(find_triage_log(), @triage)
+    end
+
     desc "resolve", "mark the current task as resolved"
     def resolve
       triage_file_path = find_triage_log()
