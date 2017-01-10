@@ -35,3 +35,9 @@ module Enumerable
     end
   end
 end
+
+class Integer
+  def magic_number
+    return self.to_s(16).chars.each_slice(2).to_a.map(&:join).map{|d|d.to_i(16)}.map(&:chr).join
+  end
+end
