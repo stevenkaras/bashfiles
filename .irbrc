@@ -44,6 +44,6 @@ end
 
 class String
   def magic_number
-    return self.chars.mpa(&:ord).map{|c|c.to_i(16)}.join.to_i(16)
+    return self.chars.map(&:ord).map{|c|c.to_i(16)}.join.to_i(16)
   end
 end
