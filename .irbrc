@@ -41,3 +41,9 @@ class Integer
     return self.to_s(16).chars.each_slice(2).to_a.map(&:join).map{|d|d.to_i(16)}.map(&:chr).join
   end
 end
+
+class String
+  def magic_number
+    return self.chars.mpa(&:ord).map{|c|c.to_i(16)}.join.to_i(16)
+  end
+end
