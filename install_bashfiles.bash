@@ -29,6 +29,7 @@ function remove_broken_symlinks() {
   local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   local target="$1"
 
+  shopt -s dotglob
   for file in "$target/"*; do
     if [[ -h "$file" && ! -e "$file" ]]; then
       local symlink_target="$(readlink -n "$file")"
