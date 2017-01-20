@@ -106,8 +106,9 @@ function do_install() {
 	[[ ! -e "$HOME/.gitconfig" ]] && cp "$ROOTDIR/.gitconfig" "$HOME/.gitconfig"
 
 	# symlink the local profile files into the repo for convenience
-	ln -s -n "$HOME/.profile" "$ROOTDIR/.profile"
-	ln -s -n "$HOME/.bash_profile" "$ROOTDIR/.bash_profile"
+	ln -s -n "$HOME/.profile" "$ROOTDIR/.profile" 2>/dev/null
+	ln -s -n "$HOME/.bash_profile" "$ROOTDIR/.bash_profile" 2>/dev/null
+	ln -s -n "$HOME/.bashrc" "$ROOTDIR/.bashrc" 2>/dev/null
 
 	return 0
 }
