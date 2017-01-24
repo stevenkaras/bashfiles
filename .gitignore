@@ -1,4 +1,5 @@
 .weechat/logs
+.weechat/sec.conf
 .profile
 .bash_profile
 .bashrc
