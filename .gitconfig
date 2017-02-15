@@ -16,6 +16,7 @@
   # show files ignored by git
   ign = ls-files -o -i --exclude-standard
   force-pull = !git fetch && git reset --hard @{u}
+  dangling-commits = !git fsck --dangling | awk '/dangling commit/ { print $3 }'
 
   # inspired by Human Git Aliases (http://gggritso.com/human-git-aliases)
   unstage = reset -q HEAD --
