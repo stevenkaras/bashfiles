@@ -56,7 +56,11 @@ function do_install() {
 
 	remove_broken_symlinks "$HOME"
 	for bashfile in "$ROOTDIR"/.bash*; do
-		ln -s -n "$bashfile" "$HOME/$(basename "$bashfile")" 2>/dev/null
+		local bashfilename="$(basename "$bashfile")"
+		# don't accidentally create recursive symlinks
+		if [[ ! -h "$bashfile" ]]; then
+			ln -s -n "$bashfile" "$HOME/$bashfilename" 2>/dev/null
+		fi
 	done
 	local platform=$(_platform)
 	# inject the bashfiles
