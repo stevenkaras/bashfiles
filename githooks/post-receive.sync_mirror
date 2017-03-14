@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# post-receive githook for synchronous mirroring
+# This means that you will see the result of the mirroring while pushing your changes.
+# You may want to consider using the async hook if a delay or temporary failure is acceptable
+
+# The assumption is that there is a remote called "sync-mirrors" that includes all the mirrors to push to asynchronously.
+# if there is no such remote, this hook does nothing
+
+mirror_push_url="$(git remote get-url --push sync-mirrors 2>&1)"
+if [[ $? == 0 && -n "$mirror_push_url" ]]; then
+	git push --mirror sync-mirrors
+fi
