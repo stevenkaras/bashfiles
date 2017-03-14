@@ -26,19 +26,23 @@ class GitSurgery
   desc "surgery", "Automatically fix corrupt packfiles"
   def surgery
     # diagnose the issue (find any corrupt packfiles)
-    packfiles = corrupt_packfiles
-    unpack_packfile(packfiles)
-    # unpack as many objects as possible from the packfile
-    fix_missing_blob
+    corrupt_packfiles.each do |corrupt_packfile|
+      # unpack as many objects as possible from the packfile
+      unpack_packfile(corrupt_packfile)
+    end
+
     # find any missing blobs
-    # fetch the blobs from the remotes (maybe include a network distance for the remotes?)
+    missing_blobs.each do |missing_blob|
+      # fetch the blobs from the remotes (maybe include a network distance for the remotes?)
+      fetch_remote_blob(missing_blob)
+    end
   end
 
   def corrupt_packfiles
     fsck_result, _ = Open3.capture2e("git fsck --strict --full --no-dangling")
     packfiles = fsck_result.lines.reduce([]) do |result, line|
       case line
-      when /^error: packfile (.*) does not match index/
+      when /^error: (.*\.pack) SHA1 checksum mismatch/
         packfile = $~[1]
         result << packfile
       end
@@ -48,21 +52,25 @@ class GitSurgery
   end
 
   def unpack_packfile(packfiles)
-    packfiles.each do |packfile|
-      puts "unpacking #{packfile}"
-      spawn("git unpack-objects", in: packfile, out: "/dev/null", err: [:child, :out])
-      FileUtils.rm(packfile, force: true)
-    end
+    puts "unpacking #{packfile}"
+    FileUtils.mv(packfile, "#{packfile}.corrupt")
+    pid = spawn("git unpack-objects", in: packfile, out: "/dev/null", err: [:child, :out])
+    _, status = Process.wait2(pid)
+    raise "unpacking failed" unless status.success?
+    FileUtils.rm("#{packfile}.corrupt", force: true)
   end
 
-  def fix_missing_blob
-    fsck_result, _ = Open3.capture2e("git fsck --strict --full --connectivity-only")
-    fsck_result.lines.each do |line|
+  def missing_blobs
+    fsck_result, _ = Open3.capture2e("git fsck --strict --full --no-dangling")
+    blobs = fsck_result.lines.reduce([]) do |result, line|
       case line
       when /missing blob (.*)/
-        fetch_remote_blob($~[1])
+        missing_blob = $~[1]
+        result << missing_blob
       end
+      result
     end
+    return blobs.sort.uniq
   end
   
   desc "fetch_remote_blob"
