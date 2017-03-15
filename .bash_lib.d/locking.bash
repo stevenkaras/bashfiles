@@ -8,6 +8,20 @@ function bashlock() {
 	local LOCKFILE="$1"
 	shift
 
+	bashlock_acquire "$LOCKFILE"
+
+	# execute the command
+	"$@"
+	local exit_status="$?"
+
+	bashlock_release "$LOCKFILE"
+
+	return "$exit_status"
+}
+
+function bashlock_acquire() {
+	local LOCKFILE="$1"
+
 	echo "$$" >"$LOCKFILE.$$"
 	while ! ln "$LOCKFILE.$$" "$LOCKFILE" 2>/dev/null; do
 		if [[ ! -s "$LOCKFILE" ]]; then
@@ -22,17 +36,11 @@ function bashlock() {
 			fi
 		fi
 	done
+}
 
-	# execute the command
-	"$@"
-	local exit_status="$?"
+function bashlock_release() {
+	local LOCKFILE="$1"
 
 	rm -f "$LOCKFILE"
 	rm -f "$LOCKFILE.$$"
-
-	return "$exit_status"
-}
-
-function bashlock_acquire() {
-	
 }
