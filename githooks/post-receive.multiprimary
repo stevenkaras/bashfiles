@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# post-receive githook for multiprimary mirroring
+
+if [[ "$GIT_PUSH_OPTION_COUNT" == 1 && "$GIT_PUSH_OPTION_0" == "mirror" ]]; then
+	exit 0
+fi
+
+git push --mirror primaries -o mirror
+
+# release the lock
+PRIMARY_SERVER="TBD"
+REPO_NAME="TBD"
+
+ssh "$PRIMARY_SERVER" "fs_advisory_lock unlock \"$REPO_NAME\".mppush"
