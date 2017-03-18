@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+
+function _lock() {
+	local lockfile="$1"
+	local lease_term="${2:-300}" # 5 minute default lease
+
+	local now="$(date +%s)"
+	let expiry="$now + $lease_term"
+	printf "$$\n$expiry" > "$lockfile.$expiry"
+	while ! ln "$lockfile.$expiry" "$lockfile" 2>/dev/null; do
+		if [[ ! -s "$lockfile" ]]; then
+			if ! rm -f "$lockfile"; then
+				return 1
+			fi
+		else
+			local current_expiry="$(tail -n 1 "$lockfile")"
+			if [[ "$current_expiry" -lt "$now" ]]; then
+				if ! rm -f "$lockfile"; then
+					return 1
+				fi
+			else
+				return 1
+			fi
+		fi
+	done
+
+	return 0
+}
+
+function _unlock() {
+	local lockfile="$1"
+
+	for lockfile_details in "$lockfile.*"; do
+		if [[ "$lockfile" -ef "$lockfile_details" ]]; then
+			rm -f "$lockfile_details"
+		fi
+	done
+	rm -f "$lockfile"
+}
+
+function show_usage() {
+	local prog="$(basename "$0")"
+	cat <<-HELPMESSAGE
+		  $prog lock [LOCKNAME] [LEASE_TERM]
+		  $prod unlock [LOCKNAME]
+	HELPMESSAGE
+	if [[ "$1" == "-v" || "$1" == "--verbose" ]]; then
+		cat <<-VERBOSEHELP
+
+			There are a handful of atomic filesystem operations. This script wraps them to provide advisory locks.
+		VERBOSEHELP
+	fi
+}
+
+function main() {
+	local subcommand="$1"
+	shift
+	case "$subcommand" in
+		l|lock)
+			_lock "$@"
+			return $?
+			;;
+		u|unlock)
+			_unlock "$@"
+			return $?
+			;;
+		-?|-h|--help|help|"")
+			show_usage "$@"
+			exit $?
+			;;
+		*)
+			echo "Unknown command: $subcommand"
+			echo ""
+			show_usage
+			exit 2
+			;;
+	esac
+}
+
+main "$@"
