@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 
 function _lock() {
+	while ! _trylock "$@"; do
+		sleep 0.1
+	done
+	return 0
+}
+
+function _trylock() {
 	local lockfile="$1"
 	local lease_term="${2:-300}" # 5 minute default lease
 
@@ -13,6 +20,7 @@ function _lock() {
 				return 1
 			fi
 		else
+			#TODO: fix this to work properly
 			local current_expiry="$(tail -n 1 "$lockfile")"
 			if [[ "$current_expiry" -lt "$now" ]]; then
 				if ! rm -f "$lockfile"; then
@@ -27,27 +35,40 @@ function _lock() {
 	return 0
 }
 
+function _renew() {
+	local lockfile="$1"
+	local lease_term="${2:-300}" # 5 minute default lease
+
+	local now="$(date +%s)"
+	let expiry="$now + $lease_term"
+	local current_expiry="$(tail -n 1 "$lockfile")"
+	printf "$$\n$expiry" > "$lockfile.$current_expiry"
+	mv "$lockfile.$current_expiry" "$lockfile.$expiry"
+
+	return 0
+}
+
 function _unlock() {
 	local lockfile="$1"
 
-	for lockfile_details in "$lockfile.*"; do
-		if [[ "$lockfile" -ef "$lockfile_details" ]]; then
-			rm -f "$lockfile_details"
-		fi
-	done
+	local current_expiry="$(tail -n 1 "$lockfile")"
+	rm -f "$lockfile.$current_expiry"
 	rm -f "$lockfile"
 }
 
 function show_usage() {
 	local prog="$(basename "$0")"
 	cat <<-HELPMESSAGE
-		  $prog lock [LOCKNAME] [LEASE_TERM]
-		  $prod unlock [LOCKNAME]
+		  $prog lock [LOCKNAME] [LEASE_TERM]     # acquire the advisory lock, blocking until it's acquired
+		  $prog trylock [LOCKNAME] [LEASE_TERM]  # exits with status 0 if the lock is acquired, otherwise 1
+		  $prog renew [LOCKNAME] [LEASE_TERM]    # renew a currently held lock
+		  $prog unlock [LOCKNAME]                # release an advisory lock
 	HELPMESSAGE
 	if [[ "$1" == "-v" || "$1" == "--verbose" ]]; then
 		cat <<-VERBOSEHELP
 
-			There are a handful of atomic filesystem operations. This script wraps them to provide advisory locks.
+			This script provides a simple locking mechanism for use in external scripts.
+			The default lease term is 5 minutes.
 		VERBOSEHELP
 	fi
 }
@@ -56,13 +77,21 @@ function main() {
 	local subcommand="$1"
 	shift
 	case "$subcommand" in
+		r|renew)
+			_renew "$@"
+			exit $?
+			;;
+		t|trylock)
+			_trylock "$@"
+			exit $?
+			;;
 		l|lock)
 			_lock "$@"
-			return $?
+			exit $?
 			;;
 		u|unlock)
 			_unlock "$@"
-			return $?
+			exit $?
 			;;
 		-?|-h|--help|help|"")
 			show_usage "$@"
@@ -77,4 +106,6 @@ function main() {
 	esac
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+	main "$@"
+fi
