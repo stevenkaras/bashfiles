@@ -8,11 +8,13 @@
 # The assumption is that there is a remote called "async-mirrors" that includes all the mirrors to push to asynchronously.
 # if there is no such remote, this hook does nothing
 
-#TODO: lock this, so only one push runs at a time (pushes should be iterative, so this is ok)
+REPO_NAME="TBD"
 
 mirror_push_url="$(git remote get-url --push async-mirrors 2>&1)"
 if [[ $? == 0 && -n "$mirror_push_url" ]]; then
 	cat <<-BASH | at now
+		fs_advisory_lock lock "$TMPDIR/$REPO_NAME"
 		git push --mirror async-mirrors
+		fs_advisory_lock unlock "$TMPDIR/$REPO_NAME"
 	BASH
 fi
