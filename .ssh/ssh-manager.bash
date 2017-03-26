@@ -29,13 +29,23 @@ function enumerate_servers() {
 }
 
 function distribute() {
-    enumerate_servers "$1" | parallel -j0 "$0 push_$1 {}"
+	case "$1" in
+	-s|--seq|--sequential)
+		shift
+		local do_with="xargs -I {}"
+		;;
+	*)
+		local do_with="parallel -j0"
+		;;
+	esac
+
+	enumerate_servers "$1" | $do_with "$0" "push_$1" {}
 }
 
 function push_all() {
 	# push out the managed configurations/authorized keys
-	distribute authorized_keys
-	distribute config
+	distribute "$@" authorized_keys
+	distribute "$@" config
 }
 
 function compile_file() {
