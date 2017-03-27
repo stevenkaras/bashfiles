@@ -13,19 +13,23 @@ function _trylock() {
 
 	local now="$(date +%s)"
 	let expiry="$now + $lease_term"
-	printf "$$\n$expiry" > "$lockfile.$expiry"
+	printf "%s" "$$\n$expiry" > "$lockfile.$expiry"
 	while ! ln "$lockfile.$expiry" "$lockfile" 2>/dev/null; do
 		if [[ ! -s "$lockfile" ]]; then
 			if ! rm -f "$lockfile"; then
 				return 1
 			fi
 		else
-			#TODO: fix this to work properly
 			local current_expiry="$(tail -n 1 "$lockfile")"
 			if [[ "$current_expiry" -lt "$now" ]]; then
-				if ! rm -f "$lockfile"; then
-					return 1
-				fi
+				# The lease has expired, and the lock can be semi-safely busted open
+				# However, I don't have a good solution on how to do this...
+
+				#NOTE: this results in a TOCTTOU bug
+				# if ! rm -f "$lockfile"; then
+				# 	return 1
+				# fi
+				return 1
 			else
 				return 1
 			fi
@@ -42,7 +46,7 @@ function _renew() {
 	local now="$(date +%s)"
 	let expiry="$now + $lease_term"
 	local current_expiry="$(tail -n 1 "$lockfile")"
-	printf "$$\n$expiry" > "$lockfile.$current_expiry"
+	printf "%s" "$$\n$expiry" > "$lockfile.$current_expiry"
 	mv "$lockfile.$current_expiry" "$lockfile.$expiry"
 
 	return 0
