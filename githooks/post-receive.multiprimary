@@ -12,4 +12,4 @@ git push --mirror primaries -o mirror
 PRIMARY_SERVER="TBD"
 REPO_NAME="TBD"
 
-ssh "$PRIMARY_SERVER" "fs_advisory_lock unlock \"$REPO_NAME\".mppush"
+ssh "$PRIMARY_SERVER" "bin/fs_advisory_lock unlock \"\${TMPDIR:-/tmp}/$REPO_NAME\".mppush"

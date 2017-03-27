@@ -6,12 +6,11 @@ if [[ "$GIT_PUSH_OPTION_COUNT" == 1 && "$GIT_PUSH_OPTION_0" == "mirror" ]]; then
 	exit 0
 fi
 
-# acquire the local lock, followed by the remote locks
+# acquire the push lock
 PRIMARY_SERVER="TBD"
 REPO_NAME="TBD"
 
-#TODO: handle failure of getting the advisory lock
-if ! ssh "$PRIMARY_SERVER" "fs_advisory_lock lock \"$REPO_NAME\".mppush"; then
+if ! ssh "$PRIMARY_SERVER" "bin/fs_advisory_lock trylock \"\${TMPDIR:-/tmp}/$REPO_NAME\".mppush"; then
 	echo "failed to acquire push lock"
 	exit 1
 fi
