@@ -96,8 +96,10 @@ class Triage
     end
 
     desc "defer", "defer the current task to the end of the list"
-    def defer
-      @triage.tasks.push(@triage.tasks.shift)
+    def defer(amount = 1)
+      amount.to_i.times do
+        @triage.tasks.push(@triage.tasks.shift)
+      end
       File.write(find_triage_log(), @triage)
     end
 
@@ -123,8 +125,11 @@ class Triage
     end
 
     desc "swap", "swap the first two tasks in the list"
-    def swap
-      @triage.tasks[0..1] = @triage.tasks[0..1].reverse
+    def swap(with_target = 1)
+      with_target = with_target.to_i
+      top_task = @triage.tasks[0]
+      @triage.tasks[0] = @triage.tasks[with_target]
+      @triage.tasks[with_target] = top_task
       File.write(find_triage_log(), @triage)
     end
 
