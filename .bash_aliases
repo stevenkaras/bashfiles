@@ -27,7 +27,7 @@ function faketty { script -qfc "$(printf "%q " "$@")"; }
 
 function exitcode() {
     local code="${1:-0}"
-    return $code
+    return "$code"
 }
 
 # Launch explain shell website for a commnad
@@ -46,17 +46,17 @@ function explain {
     done
 
     # opens url in browser
-    open $url
+    open "$url"
 }
 
 function sshmux() {
-    ssh -t "$@" tmux new -A -s $USER
+    ssh -t "$@" tmux new -A -s "$USER"
 }
 alias mux='tmuxinator'
 alias fucking='sudo'
 alias va='$VISUAL ~/.bash_aliases'
 alias sa='. ~/.bash_aliases'
-alias h?='history | grep'
+alias h\?='history | grep'
 function sync_history() {
     if [[ -f "$1" ]]; then
         local OLD_HISTFILE="$HISTFILE"
@@ -73,7 +73,7 @@ alias htmlmail='python -c '"'"'import cgi,sys; print("<pre>" + cgi.escape(sys.st
 alias bashquote='python -c "import sys,pipes; print pipes.quote(sys.stdin.readline().strip())"'
 
 function mkcd() {
-    mkdir -p $@ && cd $@
+    mkdir -p "$@" && cd "$@" || return 1
 }
 
 function anywait() {
@@ -85,10 +85,10 @@ function anywait() {
 }
 
 function track() {
-    \time -v "$@"
     date
-    local command="$@"
-    notify "completed $command"
+    command time -v "$@"
+    date
+    notify "completed $*"
 }
 
 ## version control ##
@@ -99,12 +99,13 @@ alias gg='ui_process "git gui"'
 alias gk='ui_process "gitk"'
 
 function loc() {
+    local target="${1:-*}"
     echo "   lines   words   chars filename"
-    find . -type f -name $1 | xargs wc
+    find . -type f -name "$target" -exec wc {} +
 }
 
 function gitstat() {
-    git log --author=$1 --pretty=tformat: --numstat | awk '{ adds += $1; subs += $2; loc += $1 - $2 } END { printf "added: %s removed: %s total: %s\n",adds,subs,loc }' -
+    git log --author="$1" --pretty=tformat: --numstat | awk '{ adds += $1; subs += $2; loc += $1 - $2 } END { printf "added: %s removed: %s total: %s\n",adds,subs,loc }' -
 }
 
 function git-fetch-mirror() {
@@ -119,7 +120,7 @@ alias rm_conflicts="find . \( -name '*.orig' \) -delete"
 #################################
 
 function jsoncurl() {
-    curl -H "Accept: application/json" -H "Content-Type: application/json" $@
+    curl -H "Accept: application/json" -H "Content-Type: application/json" "$@"
     echo
 }
 
@@ -132,7 +133,7 @@ alias dockerip='ip -4 addr show docker0 | extractip4'
 alias dockergc='docker images -f dangling=true | tail -n+2 | cut -c41-52 | xargs -I {} docker rmi {}'
 
 function docker-ssh-push() {
-    docker save $2 | bzip2 | pv | ssh $1 'bunzip2 | docker load'
+    docker save "$2" | bzip2 | pv | ssh "$1" 'bunzip2 | docker load'
 }
 
 alias json2bson='ruby -rjson -rbson -n -e "puts JSON.parse(\$_).to_bson.to_s"'
