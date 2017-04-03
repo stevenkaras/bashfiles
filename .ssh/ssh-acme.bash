@@ -44,7 +44,7 @@ function trust() {
 	local authorized_keys_prefix='command="$HOME/bin/ssh-acme autosign '"$key_path"'"'
 	# the ssh-acme/ssh-ca scripts require a pty...so we can't set no-pty
 	local authorized_keys_options=',no-agent-forwarding,no-port-forwarding,no-user-rc,no-X11-forwarding'
-	local authorized_keys_stanza="${authorized_keys_prefix}${authorized_keys_options} $(cat $key_path)"
+	local authorized_keys_stanza="${authorized_keys_prefix}${authorized_keys_options} $(cat "$key_path")"
 	echo "$authorized_keys_stanza" >> "$HOME/.ssh/authorized_keys"
 	echo "$(date -u +%FT%T%z):acme-trust: $fingerprint" >> "$SSHCA_ROOT/audit.log"
 	echo "Trusted $fingerprint to be automatically issued certificates"

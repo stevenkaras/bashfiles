@@ -3,7 +3,7 @@
 if [[ $# == 0 ]]; then
 	git config --get-regexp 'alias.*' | colrm 1 6 | sed 's/[ ]/ = /'
 elif [[ $# == 2 ]]; then
-	git config --global alias.\"$1\" \"$2\"
+	git config --global alias.\""$1"\" \""$2"\"
 else
 	echo "usage: git alias <new alias> <original command>" >&2
 	exit 1

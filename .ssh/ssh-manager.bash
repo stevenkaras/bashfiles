@@ -25,7 +25,7 @@ function init_manager() {
 }
 
 function enumerate_servers() {
-    find "$PWD"/"$1" -name '*@*' | xargs -I {} basename {}
+    find "$PWD"/"$1" -name '*@*' -exec basename {} +
 }
 
 function distribute() {

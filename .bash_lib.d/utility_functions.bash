@@ -3,33 +3,33 @@
 function expand_path {
     if [[ -e "$1" ]]; then
         if [[ "$1" == "." ]]; then
-            echo "$(pwd)"
+            echo "$PWD"
         elif [[ "$(basename "$1")" == ".." ]]; then
             pushd "$1" >/dev/null
-            echo "$(pwd)"
+            echo "$PWD"
             popd >/dev/null
         else
             pushd "$(dirname "$1")" >/dev/null
-            echo "$(pwd)/$(basename "$1")"
+            echo "$PWD/$(basename "$1")"
             popd >/dev/null
         fi
     else
-        echo "$(expand_path $(dirname "$1"))/$(basename "$1")"
+        echo "$(expand_path "$(dirname "$1")")/$(basename "$1")"
     fi
 }
 
 # expands the path of any non-options in the given args
 function expand_args {
     ARGS=""
-    for arg in $@; do
+    for arg in "$@"; do
         if [[ "-" == "${arg:0:1}" ]]; then
             ARG=$arg
         else
-            ARG=$(expand_path $arg)
+            ARG=$(expand_path "$arg")
         fi
         ARGS="$ARGS $ARG"
     done
-    echo $ARGS
+    echo "$ARGS"
 }
 
 # Cache an expensive, volatile command, caching the result for the specified number of seconds
@@ -48,11 +48,11 @@ function cache_command() {
     esac
     if [[ ! -r "$1" ]]; then
         gen_cache=true
-    elif (($(date +%s) - $(stat $stat_options "$1") > $cache_period)); then
+    elif (($(date +%s) - $(stat $stat_options "$1") > cache_period)); then
         gen_cache=true
     fi
     if [[ $gen_cache ]]; then
-        eval $2 > "$1"
+        eval "$2" > "$1"
     fi
-    echo $(cat "$1")
+    cat "$1"
 }

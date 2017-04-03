@@ -30,7 +30,7 @@ Host $server
 SSH_CONFIG
     local id_file="$username@$server.id_rsa"
     ssh-keygen -t rsa -b 4096 -C "$(hostname)@$server <$USER_EMAIL>" -f "$HOME/.ssh/$id_file"
-    local new_key="$(cat $HOME/.ssh/$id_file.pub)"
+    local new_key="$(cat "$HOME/.ssh/$id_file.pub")"
     ssh -p $port -i "$HOME/.ssh/$id_file" "$username@$server" "tee -a \$HOME/.ssh/authorized_keys <<<\"$new_key\" >/dev/null"
 }
 

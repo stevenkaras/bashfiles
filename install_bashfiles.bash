@@ -64,8 +64,8 @@ function do_install() {
 	done
 	local platform=$(_platform)
 	# inject the bashfiles
-	if ! egrep ~/.bashrc -e "(\.|source)\s+('|\")?($HOME|\\\$HOME)/.bashlib" >/dev/null; then
-		cat <<-BASH >> $HOME/.bashrc
+	if ! grep -E "$HOME/.bashrc" -e "(\.|source)\s+('|\")?($HOME|\\\$HOME)/.bashlib" >/dev/null; then
+		cat <<-BASH >> "$HOME/.bashrc"
 			if [[ -f "\$HOME/.bashrc_$platform" ]]; then
 			    . "\$HOME/.bashrc_$platform"
 			fi

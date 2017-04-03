@@ -12,8 +12,8 @@ function cleanup_from_pid_file() {
   if [[ ! -f "$1" ]]; then
     exit 0
   fi
-  graceful_kill $(cat "$1") -SIGINT 3 -SIGTERM 10 -0
-  if [[ $? -ne 0 ]]; then
+
+  if ! graceful_kill "$(cat "$1")" -SIGINT 3 -SIGTERM 10 -0; then
     rm "$1"
     exit 0
   fi
@@ -47,7 +47,7 @@ function map_service() {
       echo "mailcatcher=mailcatcher -f"
       ;;
     *)
-      echo "$1=$@"
+      echo "$1=$*"
       ;;
   esac
 }
@@ -70,17 +70,17 @@ function main() {
   local -a labels
   local -a commands
   local i
-  for i in ${!services[@]}; do
-    services[$i]=$( map_service ${services[$i]} )
+  for i in "${!services[@]}"; do
+    services[$i]=$( map_service "${services[$i]}" )
     labels[$i]="${services[$i]/%=*/}"
     commands[$i]="${services[$i]:((${#labels[$i]} + 1))}"
   done
-  local cleanup_command="cleanup ${labels[@]}; exit"
+  local cleanup_command="cleanup ${labels[*]}; exit"
   trap "$cleanup_command" SIGHUP SIGINT SIGTERM
-  for i in ${!services[@]}; do
+  for i in "${!services[@]}"; do
     echo "Starting ${labels[$i]}: ${commands[$i]}"
-    ${commands[$i]} > .${labels[$i]}.log &
-    echo $! > .${labels[$i]}.pid
+    ${commands[$i]} > ."${labels[$i]}".log &
+    echo $! > ."${labels[$i]}".pid
   done
   while true; do
     sleep 10

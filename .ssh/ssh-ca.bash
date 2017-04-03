@@ -22,8 +22,7 @@ function setup_ca() {
 	chmod 644 "$target/next_cert_id"
 	echo "1" > "$target/next_krl_id"
 	chmod 644 "$target/next_krl_id"
-	ssh-keygen -t rsa -b 4096 -f "$target/private/ca_key" -C "CA by $USER_EMAIL"
-	[[ $? != 0 ]] && return $?
+	ssh-keygen -t rsa -b 4096 -f "$target/private/ca_key" -C "CA by $USER_EMAIL" || return $?
 	cp "$target/private/ca_key.pub" "$target/ca.pub"
 	touch "$target/krl.source"
 	ssh-keygen -s "$target/private/ca_key" -z 0 -k -f "$target/krl"
@@ -49,9 +48,8 @@ function sign_key() {
 	# local key_comment="$(echo "$key_identity" | cut -d' ' -f4-)"
 	local cert_path="${key_to_sign/%.pub/-cert.pub}"
 	local cert_name="$(basename "$cert_path")"
-	ssh-keygen -s "$SSHCA_ROOT/private/ca_key" -I "$cert_id-$USER_EMAIL" -z "$cert_id" "$@" "$key_to_sign"
-	[[ $? != 0 ]] && return $?
-	echo $(($cert_id + 1)) > "$SSHCA_ROOT/next_cert_id"
+	ssh-keygen -s "$SSHCA_ROOT/private/ca_key" -I "$cert_id-$USER_EMAIL" -z "$cert_id" "$@" "$key_to_sign" || return $?
+	echo $((cert_id + 1)) > "$SSHCA_ROOT/next_cert_id"
 	echo "$(date -u +%FT%T%z):sign:$cert_id: $key_identity" >> "$SSHCA_ROOT/audit.log"
 	cp "$cert_path" "$SSHCA_ROOT/certs/${cert_id}-${cert_name}"
 }
@@ -83,8 +81,8 @@ function sign_host_key() {
 				local key_file="$server.$key_type.pub"
 				local cert_file="${key_file/%.pub/-cert.pub}"
 				echo "$actual_key" > "$key_file"
-				sign_key "$key_file" -h "$@"
-				if [[ $? != 0 ]]; then
+
+				if sign_key "$key_file" -h "$@"; then
 					echo "failed to sign $key_type from $server"
 					rm "$key_file"
 				else
@@ -107,15 +105,14 @@ function revoke() {
 		fi
 		echo "$(date -u +%FT%T%z):revoke: $arg" >> "$SSHCA_ROOT/audit.log"
 	done
-	ssh-keygen -s "$SSHCA_ROOT/private/ca_key" -z "$krl_id" -k -u -f "$SSHCA_ROOT/krl" "$SSHCA_ROOT/krl.source"
-	[[ $? != 0 ]] && return $?
-	echo $(($krl_id + 1)) > "$SSHCA_ROOT/next_krl_id"
+	ssh-keygen -s "$SSHCA_ROOT/private/ca_key" -z "$krl_id" -k -u -f "$SSHCA_ROOT/krl" "$SSHCA_ROOT/krl.source" || return $?
+	echo $((krl_id + 1)) > "$SSHCA_ROOT/next_krl_id"
 	echo "$(date -u +%FT%T%z):revoke: updated krl to revision $krl_id" >> "$SSHCA_ROOT/audit.log"
 }
 
 function authorized_key_ca_stanza() {
 	local IFS=","
-	local principals="$@"
+	local principals="$*"
 	unset IFS
 	if [[ -n "$principals" ]]; then
 		principals=" principals=\"$principals\""
@@ -150,7 +147,7 @@ function trust_ca() {
 }
 
 function knownhosts_ca_stanza() {
-	local hosts="$@"
+	local hosts="$*"
 	if [[ -z "$hosts" ]]; then
 		hosts="*"
 	fi
@@ -235,7 +232,7 @@ function main() {
 			;;
 		selfdestruct|uninstall|implode)
 			find_ca_root || exit $?
-			read -p "About to delete $SSHCA_ROOT. Type yes to continue: "
+			read -r -p "About to delete $SSHCA_ROOT. Type yes to continue: "
 			if [[ "$REPLY" == "yes" ]]; then
 				local removal_command="rm"
 				type -t srm >/dev/null 2>&1 && removal_command="srm"

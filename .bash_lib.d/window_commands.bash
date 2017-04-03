@@ -8,10 +8,10 @@
 function set_title() {
 	case $TERM in
 	screen*|tmux*)
-		printf "\033k$1\033\\"
+		printf "\033k%s\033\\" "$1"
 		;;
 	xterm*)
-		printf "\033]0;$1\a"
+		printf "\033]0;%s\a" "$1"
 		;;
 	*)
 		;;

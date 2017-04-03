@@ -1,4 +1,6 @@
-#!/usr/bin/env bash -O extglob
+#!/usr/bin/env bash
+
+shopt extglob
 
 # this program is meant to send a sequence of signals to the given program, so long as it is still alive
 
@@ -6,9 +8,7 @@ function graceful_kill() {
 	local target_pid="$1"
 	shift
 	local action
-	local i
-	for ((i=1; i <= $#; i++)); do
-		action=${@:$i:1}
+	for action in "$@"; do
 		# first, check that the process still exists
 		kill -0 "$target_pid" &>/dev/null
 		if [[ $? -eq 1 ]]; then

@@ -22,8 +22,8 @@ function rotate_ssh_key() {
     mv "$HOME/.ssh/$id_file.pub" "$HOME/.ssh/archive/$archive_id_file.pub"
     # ssh into the server and revoke the specific key we're rotating
     ssh-keygen -t rsa -b 4096 -C "$(hostname)@$server <$USER_EMAIL>" -f "$HOME/.ssh/$id_file"
-    local new_key="$(cat $HOME/.ssh/$id_file.pub)"
-    ssh -p $port -i "$HOME/.ssh/archive/$archive_id_file" $username@$server "tee -a \$HOME/.ssh/authorized_keys <<<\"$new_key\" >/dev/null; $(typeset -f revoke_key); revoke_key $key_to_revoke"
+    local new_key="$(cat "$HOME/.ssh/$id_file.pub")"
+    ssh -p "$port" -i "$HOME/.ssh/archive/$archive_id_file" "$username@$server" "tee -a \$HOME/.ssh/authorized_keys <<<\"$new_key\" >/dev/null; $(typeset -f revoke_key); revoke_key $key_to_revoke"
     ssh-add "$HOME/.ssh/$id_file"
 }
 

@@ -2,8 +2,8 @@
 
 ## include all the prompt libraries ##
 ######################################
-for prompt_lib in `ls ~/.bash_prompt.d`; do
-	. ~/.bash_prompt.d/$prompt_lib
+for prompt_lib in "$HOME/.bash_prompt.d/"*; do
+	source "$HOME/.bash_prompt.d/$prompt_lib"
 done
 
 ## build the actual prompt ##
