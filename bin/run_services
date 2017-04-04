@@ -53,13 +53,13 @@ function map_service() {
 }
 
 function main() {
+	local -a services
 	if [[ $# -gt 0 ]]; then
-		local services=( "$@" )
+		services=( "$@" )
 	elif [[ -s "./.services" ]]; then
-		local -a services
 		mapfile services < ./.services
 	else
-		local services=( )
+		services=( )
 	fi
 
 	if [[ ${#services[@]} -eq 0 ]]; then
@@ -71,7 +71,9 @@ function main() {
 	local -a commands
 	local i
 	for i in "${!services[@]}"; do
-		services[$i]=$( map_service "${services[$i]}" )
+		# NOTE: this needs to be unquoted, because otherwise it includes the potential newline in each service label,
+		# which wreaks havoc on the service mapping
+		services[$i]=$( map_service ${services[$i]} )
 		labels[$i]="${services[$i]/%=*/}"
 		commands[$i]="${services[$i]:((${#labels[$i]} + 1))}"
 	done
