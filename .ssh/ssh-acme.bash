@@ -71,16 +71,39 @@ function revoke() {
 
 	# remove the key with the fingerprint from the authorized keys
 	local authorized_keys="$HOME/.ssh/authorized_keys"
+    local options
+    local keytype
+    local key
+    local comment
+
 	while read -r line; do
-		local filtered_line="${line/#*ssh/ssh}"
-		filtered_line="${filtered_line%%#*}"
-		if [[ -n "$filtered_line" ]]; then
-			echo "$filtered_line" >"$tmpfile"
-			local stored_fingerprint="$(ssh-keygen -l -f "$tmpfile" | cut -d' ' -f2)"
-			if [[ "$stored_fingerprint" != "$fingerprint" ]]; then
-				echo "$line"
-			fi
-		else
+        if [[ "$line" = "#"* || -z "$line" ]]; then
+            echo "$line"
+            continue
+        fi
+
+        # parse the key line into [OPTIONS] KEYTYPE KEY COMMENT...
+		key="$line"
+        options="${key%% *}"
+        key="${key#* }"
+        case "$options" in
+            # valid key types taken from man 8 sshd (AUTHORIZED_KEYS section)
+            ecdsa-sha2-nistp256|ecdsa-sha2-nistp384|ecdsa-sha2-nistp521|ssh-ed25519|ssh-dss|ssh-rsa)
+                keytype="$options"
+                options=""
+                ;;
+            *)
+                keytype="${key%% *}"
+                key="${key#* }"
+                ;;
+        esac
+        comment="${key#* }"
+        key="${key%% *}"
+
+        # SSH requires the use of a file, and is incapable of working off stdin, so write to a tmpfile
+        printf "%s %s %s" "$keytype" "$key" "$comment" > "$tmpfile"
+		local stored_fingerprint="$(ssh-keygen -l -f "$tmpfile" | cut -d' ' -f2)"
+		if [[ "$stored_fingerprint" != "$fingerprint" ]]; then
 			echo "$line"
 		fi
 	done < "$authorized_keys" > "$authorized_keys.new"
