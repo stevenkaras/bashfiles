@@ -9,82 +9,82 @@
 # Alternatively, can take a list of services (from either source) in label=command format
 
 function cleanup_from_pid_file() {
-  if [[ ! -f "$1" ]]; then
-    exit 0
-  fi
+	if [[ ! -f "$1" ]]; then
+		exit 0
+	fi
 
-  if ! graceful_kill "$(cat "$1")" -SIGINT 3 -SIGTERM 10 -0; then
-    rm "$1"
-    exit 0
-  fi
-  exit 1
+	if ! graceful_kill "$(cat "$1")" -SIGINT 3 -SIGTERM 10 -0; then
+		rm "$1"
+		exit 0
+	fi
+	exit 1
 }
 
 function cleanup() {
-  for label in "$@"; do
-    cleanup_from_pid_file ".${label}.pid" &
-  done
+	for label in "$@"; do
+		cleanup_from_pid_file ".${label}.pid" &
+	done
 }
 
 function map_service() {
-  case "$1" in
-    postgresql|postgres|pgsql|pg|psql)
-      echo "postgres=postgres -D /usr/local/var/postgres"
-      ;;
-    redis)
-      echo "redis=redis-server /usr/local/etc/redis.conf"
-      ;;
-    memcached|memcache|mcache|memc)
-      echo "memcached=memcached"
-      ;;
-    rabbitmq|rmq)
-      echo "rabbitmq=rabbitmq-server"
-      ;;
-    mongodb|mongo)
-      echo "mongodb=mongod --dbpath=.mongodb"
-      ;;
-    mailcatcher|mailc)
-      echo "mailcatcher=mailcatcher -f"
-      ;;
-    *)
-      echo "$1=$*"
-      ;;
-  esac
+	case "$1" in
+		postgresql|postgres|pgsql|pg|psql)
+			echo "postgres=postgres -D /usr/local/var/postgres"
+			;;
+		redis)
+			echo "redis=redis-server /usr/local/etc/redis.conf"
+			;;
+		memcached|memcache|mcache|memc)
+			echo "memcached=memcached"
+			;;
+		rabbitmq|rmq)
+			echo "rabbitmq=rabbitmq-server"
+			;;
+		mongodb|mongo)
+			echo "mongodb=mongod --dbpath=.mongodb"
+			;;
+		mailcatcher|mailc)
+			echo "mailcatcher=mailcatcher -f"
+			;;
+		*)
+			echo "$1=$*"
+			;;
+	esac
 }
 
 function main() {
-  if [[ $# -gt 0 ]]; then
-    local services=( "$@" )
-  elif [[ -s "./.services" ]]; then
-    local -a services
-    mapfile services < ./.services
-  else
-    local services=( )
-  fi
+	if [[ $# -gt 0 ]]; then
+		local services=( "$@" )
+	elif [[ -s "./.services" ]]; then
+		local -a services
+		mapfile services < ./.services
+	else
+		local services=( )
+	fi
 
-  if [[ ${#services[@]} -eq 0 ]]; then
-    echo "Usage: run_services SERVICES"
-    echo "Or list services to run in a .services file"
-    exit 1
-  fi
-  local -a labels
-  local -a commands
-  local i
-  for i in "${!services[@]}"; do
-    services[$i]=$( map_service "${services[$i]}" )
-    labels[$i]="${services[$i]/%=*/}"
-    commands[$i]="${services[$i]:((${#labels[$i]} + 1))}"
-  done
-  local cleanup_command="cleanup ${labels[*]}; exit"
-  trap "$cleanup_command" SIGHUP SIGINT SIGTERM
-  for i in "${!services[@]}"; do
-    echo "Starting ${labels[$i]}: ${commands[$i]}"
-    ${commands[$i]} > ."${labels[$i]}".log &
-    echo $! > ."${labels[$i]}".pid
-  done
-  while true; do
-    sleep 10
-  done
+	if [[ ${#services[@]} -eq 0 ]]; then
+		echo "Usage: run_services SERVICES"
+		echo "Or list services to run in a .services file"
+		exit 1
+	fi
+	local -a labels
+	local -a commands
+	local i
+	for i in "${!services[@]}"; do
+		services[$i]=$( map_service "${services[$i]}" )
+		labels[$i]="${services[$i]/%=*/}"
+		commands[$i]="${services[$i]:((${#labels[$i]} + 1))}"
+	done
+	local cleanup_command="cleanup ${labels[*]}; exit"
+	trap "$cleanup_command" SIGHUP SIGINT SIGTERM
+	for i in "${!services[@]}"; do
+		echo "Starting ${labels[$i]}: ${commands[$i]}"
+		${commands[$i]} > ."${labels[$i]}".log &
+		echo $! > ."${labels[$i]}".pid
+	done
+	while true; do
+		sleep 10
+	done
 }
 
 main "$@"
