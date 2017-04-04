@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-shopt extglob
+shopt -s extglob
 
 # this program is meant to send a sequence of signals to the given program, so long as it is still alive
 
