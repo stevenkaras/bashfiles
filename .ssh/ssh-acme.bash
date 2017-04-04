@@ -41,7 +41,7 @@ function trust() {
 		return "$exit_code"
 	fi
 
-	local authorized_keys_prefix='command="$HOME/bin/ssh-acme autosign '"$key_path"'"'
+	local authorized_keys_prefix="command=\"env -i \$HOME/bin/ssh-acme autosign $key_path\""
 	# the ssh-acme/ssh-ca scripts require a pty...so we can't set no-pty
 	local authorized_keys_options=',no-agent-forwarding,no-port-forwarding,no-user-rc,no-X11-forwarding'
 	local authorized_keys_stanza="${authorized_keys_prefix}${authorized_keys_options} $(cat "$key_path")"
