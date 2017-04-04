@@ -3,7 +3,7 @@
 ## include all the prompt libraries ##
 ######################################
 for prompt_lib in "$HOME/.bash_prompt.d/"*; do
-	source "$HOME/.bash_prompt.d/$prompt_lib"
+	source "$prompt_lib"
 done
 
 ## build the actual prompt ##
