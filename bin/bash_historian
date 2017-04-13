@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+function _search_history() {
+	if [[ $# -lt 1 ]]; then
+		echo "USAGE: $(basename "$0") search PATTERN"
+		return 2
+	fi
+
+	#TODO: figure out how to list only the commands, or at least make cut more intelligent
+	history -n
+	history | cut -c30- | grep -e "$@" | sort | uniq -c | sort -n -r | head
+}
+
+function show_usage() {
+	local prog="$(basename "$0")"
+	cat <<-HELPMESSAGE
+		  $prog search PATTERN  # search your bash history for the given pattern
+		  $prog /PATTERN        # shorthand for search
+	HELPMESSAGE
+	if [[ "$1" == "-v" || "$1" == "--verbose" ]]; then
+		cat <<-VERBOSEHELP
+
+			This script is a pure bash implementation of historian, including search and frequency analysis
+		VERBOSEHELP
+	fi
+}
+
+function main() {
+	local subcommand="$1"
+	shift
+	case "$subcommand" in
+		/*)
+			_search_history "${subcommand:1}" "$@"
+			exit $?
+			;;
+		search)
+			_search_history "$@"
+			exit $?
+			;;
+		-?|-h|--help|help|"")
+			show_usage "$@"
+			exit $?
+			;;
+		*)
+			echo "Unknown command: $subcommand"
+			echo ""
+			show_usage
+			exit 2
+			;;
+	esac
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+	main "$@"
+fi
+
