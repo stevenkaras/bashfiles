@@ -9,6 +9,7 @@
 *.dylib
 *.gem
 *.pyc
+work-obj93.cf
 
 # Packages #
 ############
@@ -48,6 +49,7 @@ Thumbs.db
 .stfolder
 *.orig
 *.rej
+*.vcd
 
 # My personal typical trash #
 #############################
