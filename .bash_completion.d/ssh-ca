@@ -41,4 +41,4 @@ __sshca_completion() {
     COMPREPLY=($(compgen -W "$words" -- $current_word))
 }
 
-complete -o default -o nospace -F __sshca_completion sshca
+complete -o default -o nospace -F __sshca_completion ssh-ca
