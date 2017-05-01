@@ -72,6 +72,16 @@ alias frequent_history='history | cut -c30- | sort | uniq -c | sort -nr | head' 
 alias htmlmail='python -c '"'"'import cgi,sys; print("<pre>" + cgi.escape(sys.stdin.read()).encode("ascii","xmlcharrefreplace") + "</pre>")'"'"' | mail -E -a "Content-Type: text/html" '
 alias bashquote='python -c "import sys,pipes; print pipes.quote(sys.stdin.readline().strip())"'
 
+function cat() {
+    # test if STDOUT is a tty, and preemptively truncate output
+    if [[ -t 1 ]]; then
+        echo "--- snipped. use less or grep ---"
+        tail -n $LINES -q -- "$@"
+    else
+        command cat "$@"
+    fi
+}
+
 function mkcd() {
     mkdir -p "$@" && cd "$@" || return 1
 }
