@@ -40,8 +40,8 @@ function _proot() {
 	local name=""
 
 	while [[ "$pid" -ge 1 ]]; do
-		read curpid pid name < <(ps -o pid= -o ppid= -o comm=  -p "$pid")
-		if [[ "$name" =~ "${1:-sshd}" ]]; then
+		read -r curpid pid name < <(ps -o pid= -o ppid= -o comm=  -p "$pid")
+		if [[ "$name" == "${1:-sshd}"* ]]; then
 			return 0
 		fi
 	done
