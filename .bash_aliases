@@ -141,6 +141,7 @@ alias deploy='git push heroku && git push origin && heroku run rake db:migrate &
 alias extractip4='grep -o -E -e '"'"'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'"'"''
 alias dockerip='ip -4 addr show docker0 | extractip4'
 alias dockergc='docker images -f dangling=true | tail -n+2 | cut -c41-52 | xargs -I {} docker rmi {}'
+alias ipy='ipython'
 
 function docker-ssh-push() {
     docker save "$2" | bzip2 | pv | ssh "$1" 'bunzip2 | docker load'
