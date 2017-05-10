@@ -58,3 +58,9 @@ if [[ -n "$REMOTE_USER" ]]; then
 		. "$HOME/.bash_users.d/$REMOTE_USER.bash"
 	fi
 fi
+
+if [[ -n "$TMUX" ]]; then
+	if [[ -f "$HOME/.tmux_profile" ]]; then
+		. "$HOME/.tmux_profile"
+	fi
+fi

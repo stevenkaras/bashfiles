@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# This file is sourced in interactive sessions launched inside tmux
+
+export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }toggle_remote"
+
