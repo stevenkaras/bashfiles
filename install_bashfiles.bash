@@ -97,7 +97,7 @@ function do_install() {
 	done
 
 	# other files to symlink
-	for otherfile in .agignore .tmux.conf .gitignore_global .vim .irbrc .psqlrc .lessfilter .inputrc; do
+	for otherfile in .agignore .tmux.conf .tmux_profile .gitignore_global .vim .irbrc .psqlrc .lessfilter .inputrc; do
 		ln -s -n "$ROOTDIR/$otherfile" "$HOME/$otherfile" 2>/dev/null
 	done
 
