@@ -75,8 +75,12 @@ alias bashquote='python -c "import sys,pipes; print pipes.quote(sys.stdin.readli
 function cat() {
     # test if STDOUT is a tty, and preemptively truncate output
     if [[ -t 1 ]]; then
-        echo "--- snipped. use less or grep ---"
-        tail -n $LINES -q -- "$@"
+        local output="$(tail -n $LINES -q -- "$@")"
+        local trimmed="$(tail -n $((LINES - 1)) -q <<<"$output")"
+        if [[ "$trimmed" != "$output" ]]; then
+            echo "--- snipped. use less or grep ---"
+        fi
+        command cat <<<"$trimmed"
     else
         command cat "$@"
     fi
