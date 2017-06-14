@@ -95,7 +95,7 @@ class Triage
       end
     end
 
-    desc "defer", "defer the current task to the end of the list"
+    desc "defer [N]", "defer the first N tasks to the end of the list"
     def defer(amount = 1)
       amount.to_i.times do
         @triage.tasks.push(@triage.tasks.shift)
@@ -124,7 +124,7 @@ class Triage
       File.write(find_triage_log(), @triage)
     end
 
-    desc "swap", "swap the first two tasks in the list"
+    desc "swap [TO]", "swap the first task with the TOth task in the list"
     def swap(with_target = 1)
       with_target = with_target.to_i
       top_task = @triage.tasks[0]
