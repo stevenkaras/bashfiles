@@ -53,7 +53,6 @@ function sshmux() {
     ssh -t "$@" tmux new -A -s "$USER"
 }
 alias mux='tmuxinator'
-alias fucking='sudo'
 alias va='$VISUAL ~/.bash_aliases'
 alias sa='. ~/.bash_aliases'
 alias h\?='history | grep'
@@ -153,3 +152,27 @@ function docker-ssh-push() {
 
 alias json2bson='ruby -rjson -rbson -n -e "puts JSON.parse(\$_).to_bson.to_s"'
 alias bson2json='ruby -rjson -rbson -n -e "puts Hash.from_bson(BSON::ByteBuffer.new(\$_)).to_json"'
+
+## Silliness ##
+###############
+alias fucking='sudo'
+
+function xkcd() {
+    local open_command=""
+    # prefer xdg-open
+    if type -f xdg-open >/dev/null 2>&1; then
+        open_command="xdg-open"
+    elif type -f open >/dev/null 2>&1; then
+        open_command="open"
+    fi
+
+    case "$@" in
+        ''|*[!0-9]*)
+            #"$open_command" "http://www.explainxkcd.com/wiki/index.php?go=Go&title=Special%3ASearch&search=$@"
+            "$open_command" "https://relevant-xkcd.github.io/?q=$@"
+            ;;
+        *)
+            "$open_command" "https://xkcd.com/$(($1))"
+            ;;
+    esac
+}
