@@ -87,6 +87,17 @@ class Triage
       return nil
     end
 
+    desc "edit", "launch an editor for the triage file"
+    def editor
+      # prefer VISUAL, falling back on EDITOR
+      editor = ENV["VISUAL"] || ENV["EDITOR"]
+      if editor
+        exec("#{editor} '#{find_triage_log()}'")
+      else
+        puts "Cannot determine editor. Please define VISUAL or EDITOR environment variables"
+      end
+    end
+
     desc "what", "show the current issue I'm triaging"
     def what
       current_task = @triage.tasks.first
