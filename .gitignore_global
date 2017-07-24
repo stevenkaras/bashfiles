@@ -9,7 +9,18 @@
 *.dylib
 *.gem
 *.pyc
+
+# VHDL #
+########
 work-obj93.cf
+*.exe.sim/
+*.wdb
+*.prj
+_xmsgs/
+isim/
+xilinxsim.ini
+isim.cmd
+iseconfig/
 
 # Packages #
 ############
