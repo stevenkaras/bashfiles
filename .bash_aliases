@@ -169,7 +169,7 @@ function xkcd() {
     case "$@" in
         ''|*[!0-9]*)
             #"$open_command" "http://www.explainxkcd.com/wiki/index.php?go=Go&title=Special%3ASearch&search=$@"
-            "$open_command" "https://relevant-xkcd.github.io/?q=$@"
+            "$open_command" "https://relevant-xkcd.github.io/?q=$*"
             ;;
         *)
             "$open_command" "https://xkcd.com/$(($1))"
