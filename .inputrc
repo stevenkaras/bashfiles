@@ -1,9 +1,23 @@
-# iTerm2 is retarded, and I have to set this for it to send the correct keystrokes
+# site wide configs usually include some goodies
+$include /etc/inputrc
+
+# Turn on a bunch of completion features (taken from https://www.topbug.net/blog/2017/07/31/inputrc-for-humans)
+set colored-stats On
+set completion-ignore-case On
+set completion-prefix-display-length 3
+set mark-symlinked-directories On
+set show-all-if-ambiguous On
+set show-all-if-unmodified On
+set visible-stats On
+
+# iTerm2 send nonstandard modified arrow keys, so support their defaults
 "\e[1;5D": backward-word
 "\e[1;5C": forward-word
 "\e[1;9D": backward-word
 "\e[1;9C": forward-word
-"\e[A": history-search-backward
-"\e[B": history-search-forward
 "\e[C": forward-char
 "\e[D": backward-char
+
+# Search through history
+"\e[A": history-search-backward
+"\e[B": history-search-forward
