@@ -52,6 +52,9 @@ function explain {
 function sshmux() {
     ssh -t "$@" tmux new -A -s "$USER"
 }
+function moshmux() {
+    mosh "$@" -- tmux new -A -s "$USER"
+}
 alias mux='tmuxinator'
 alias va='$VISUAL ~/.bash_aliases'
 alias sa='. ~/.bash_aliases'
