@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'thunder'
+require 'fileutils'
 
 class Triage
   class Log
@@ -157,6 +158,7 @@ class Triage
       task.log << "\n" << "Marked as resolved at #{Time.now.strftime("%Y%m%d %H:%M:%S")}"
       @resolved.tasks.push(task)
       File.write(triage_file_path, @triage)
+      FileUtils.mkdir_p(File.dirname(archive_file))
       File.write(archive_file, @resolved)
     end
   end
