@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+# default to printing the current wireless network
+
+function _qr_code_contents() {
+	echo "WIFI:T:WPA;S:$1;P:$2;;"
+}
+
+function _ubuntu_find_network_pass() {
+	sudo cat "/etc/NetworkManager/system-connections/$1" | grep psk= | cut -d= -f 2
+}
+
+function _mac_find_network_pass() {
+	echo "Automatic network password discovery not supported on MacOS yet"
+	exit 2
+}
+
+function show_usage() {
+	local prog="$(basename "$0")"
+	cat <<-HELPMESSAGE
+		  $prog SSID PASSWORD  # generate a QR code for quickly setting up the network
+		  $prog SSID           # Looks up the password as saved
+	HELPMESSAGE
+}
+
+function main() {
+	if [[ $# -lt 1 ]]; then
+		show_usage
+	fi
+
+	local network="$1"
+	case "$network" in
+		-?|-h|--help|help)
+			show_usage
+			exit $?
+			;;
+		"")
+			#TODO: discover the current wireless network
+			;;
+	esac
+
+	local password
+	if [[ $# -lt 2 ]]; then
+		#TODO: find the network password
+		password="$(_ubuntu_find_network_pass "$network")"
+	else
+		password="$2"
+	fi
+
+	_qr_code_contents "$network" "$password" | qrencode -t UTF8
+}
+
+main "$@"
