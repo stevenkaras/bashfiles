@@ -6,13 +6,29 @@ function _qr_code_contents() {
 	echo "WIFI:T:WPA;S:$1;P:$2;;"
 }
 
-function _ubuntu_find_network_pass() {
-	sudo cat "/etc/NetworkManager/system-connections/$1" | grep psk= | cut -d= -f 2
+function _find_current_network() {
+	# Ubuntu typically uses iwgetid
+	if type -t iwgetid >/dev/null; then
+		iwgetid -r
+		return 0
+	fi
+	# Fall back on nm-tool
+	if type -t nm-tool >/dev/null; then
+		nm-tool | awk 'f&&/\*/{ssid = substr($1, 2, length($1) - 2); print ssid};/Wireless Access Points \(\* = current AP\)/{f=1}'
+		return 0
+	fi
+
+	echo 'Unable to discover current wireless network' 1>&2
+	return 1
 }
 
-function _mac_find_network_pass() {
-	echo "Automatic network password discovery not supported on MacOS yet"
-	exit 2
+function _find_network_pass() {
+	if [[ -f "/etc/NetworkManager/system-connections/$1" ]]; then
+		sudo cat "/etc/NetworkManager/system-connections/$1" | grep psk= | cut -d= -f 2
+	fi
+
+	echo 'Unable to discover current wireless network password' 1>&2
+	return 1
 }
 
 function show_usage() {
@@ -24,25 +40,30 @@ function show_usage() {
 }
 
 function main() {
-	if [[ $# -lt 1 ]]; then
-		show_usage
-	fi
-
 	local network="$1"
 	case "$network" in
 		-?|-h|--help|help)
 			show_usage
-			exit $?
+			exit
 			;;
 		"")
-			#TODO: discover the current wireless network
+			network="$(_find_current_network)"
+			if [[ $? != 0 ]]; then
+				exit 1
+			fi
+			if [[ -z "$network" ]]; then
+				echo 'No current network found. Are you connected?'
+				exit 1
+			fi
 			;;
 	esac
 
 	local password
 	if [[ $# -lt 2 ]]; then
-		#TODO: find the network password
-		password="$(_ubuntu_find_network_pass "$network")"
+		password="$(_find_network_pass "$network")"
+		if [[ $? != 0 ]]; then
+			exit 1
+		fi
 	else
 		password="$2"
 	fi
