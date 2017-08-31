@@ -79,7 +79,7 @@ class Triage
       end
       [
         "~/triage",
-        "~/.triage",
+        "~/.issues/triage",
       ].each do |candidate|
         full_path = File.expand_path(candidate)
         return full_path if File.exist?(full_path)
