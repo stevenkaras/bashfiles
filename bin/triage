@@ -63,19 +63,19 @@ class Triage
     end
 
     def find_triage_log
-      [
-        "triage",
-        ".issues/triage",
-      ].each do |candidate|
-        previous = nil
-        current = File.expand_path(".")
-        while true
+      previous = nil
+      current = File.expand_path(".")
+      while true
+        [
+          "triage",
+          ".issues/triage",
+        ].each do |candidate|
           full_path = File.expand_path(candidate, current)
           return full_path if File.file?(full_path)
-          previous = current
-          current = File.dirname(current)
-          break if current == previous
         end
+        previous = current
+        current = File.dirname(current)
+        break if current == previous
       end
       [
         "~/triage",
