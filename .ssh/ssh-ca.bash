@@ -28,10 +28,25 @@ function setup_ca() {
 	ssh-keygen -s "$target/private/ca_key" -z 0 -k -f "$target/krl"
 }
 
+function _save_key_from_stdin() {
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	if [[ $? != 0 ]]; then
+		>&2 echo "Failed to create temporary directory for stdin input"
+	fi
+	cat > "$tmpdir/id_rsa.pub"
+	echo "$tmpdir/id_rsa.pub"
+}
+
 function sign_key() {
 	local cert_id="$(cat "$SSHCA_ROOT/next_cert_id")"
 	local key_to_sign="$1"
+	local saved_key_from_stdin=""
 	shift
+	if [[ -z "$key_to_sign" || "$key_to_sign" == "-" ]]; then
+		key_to_sign="$(_save_key_from_stdin)"
+		saved_key_from_stdin=true
+	fi
 	if [[ ! -f "$key_to_sign" ]]; then
 		>&2 echo "$key_to_sign does not exist"
 		return 1
@@ -52,6 +67,11 @@ function sign_key() {
 	echo $((cert_id + 1)) > "$SSHCA_ROOT/next_cert_id"
 	echo "$(date -u +%FT%T%z):sign:$cert_id: $key_identity" >> "$SSHCA_ROOT/audit.log"
 	cp "$cert_path" "$SSHCA_ROOT/certs/${cert_id}-${cert_name}"
+	if [[ -n "$saved_key_from_stdin" ]]; then
+		cat "$cert_path"
+		rm "$cert_path" "$key_to_sign"
+		rmdir "$(dirname "$cert_path")"
+	fi
 }
 
 function sign_host_key() {
