@@ -88,7 +88,7 @@ class Triage
     end
 
     desc "edit", "launch an editor for the triage file"
-    def editor
+    def edit
       # prefer VISUAL, falling back on EDITOR
       editor = ENV["VISUAL"] || ENV["EDITOR"]
       if editor
