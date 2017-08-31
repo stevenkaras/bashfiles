@@ -7,7 +7,7 @@ function setup_ca() {
 			# target is an empty directory
 			:
 		else
-			echo "$target already exists. not setting up SSH CA"
+			>&2 echo "$target already exists. not setting up SSH CA"
 			return 1
 		fi
 	fi
@@ -33,14 +33,14 @@ function sign_key() {
 	local key_to_sign="$1"
 	shift
 	if [[ ! -f "$key_to_sign" ]]; then
-		echo "$key_to_sign does not exist"
+		>&2 echo "$key_to_sign does not exist"
 		return 1
 	fi
 	if [[ "$key_to_sign" != *.pub ]]; then
 		if [[ -f "$key_to_sign.pub" ]]; then
 			key_to_sign="$key_to_sign.pub"
 		else
-			echo "refusing to sign non-key $key_to_sign"
+			>&2 echo "refusing to sign non-key $key_to_sign"
 			return 1
 		fi
 	fi
@@ -70,7 +70,7 @@ function sign_host_key() {
 		fi
 		local server_keys="$(ssh-keyscan -p "$port" "$server" 2>/dev/null)"
 		if [[ -z "$server_keys" ]]; then
-			echo "$key_to_sign is not a public key file, and ssh-keyscan failed"
+			>&2 echo "$key_to_sign is not a public key file, and ssh-keyscan failed"
 			return 1
 		fi
 		local server_key
@@ -83,11 +83,12 @@ function sign_host_key() {
 				echo "$actual_key" > "$key_file"
 
 				if sign_key "$key_file" -h "$@"; then
-					echo "failed to sign $key_type from $server"
-					rm "$key_file"
+					>&2 echo "Signed $key_type for $server in $cert_file"
+					>&2 echo "You'll need to add HostCertificate /etc/ssh/$cert_file to your sshd_config"
 				else
-					echo "Signed $key_type for $server in $cert_file"
-					echo "You'll need to add HostCertificate /etc/ssh/$cert_file to your sshd_config"
+					>&2 echo "failed to sign $key_type from $server"
+					rm "$key_file"
+					return 1
 				fi
 			fi
 		done <<<"$server_keys"
@@ -110,17 +111,6 @@ function revoke() {
 	echo "$(date -u +%FT%T%z):revoke: updated krl to revision $krl_id" >> "$SSHCA_ROOT/audit.log"
 }
 
-function authorized_key_ca_stanza() {
-	local IFS=","
-	local principals="$*"
-	unset IFS
-	if [[ -n "$principals" ]]; then
-		principals=" principals=\"$principals\""
-	fi
-	local ca_pub="$(cat "$SSHCA_ROOT/ca.pub")"
-	echo "cert-authority$principals $ca_pub"
-}
-
 function trust_ca() {
     local username="${1%@*}"
     if [[ "$username" == "$1" ]]; then
@@ -140,13 +130,24 @@ function trust_ca() {
 			knownhosts_ca_stanza "$@" >> "$HOME/.ssh/known_hosts"
 			;;
 		*)
-			echo "Setting CA as authorized for $username@$server:$port"
-			ssh -p $port "$username@$server" "tee -a \$HOME/.ssh/authorized_keys <<<\"$(authorized_key_ca_stanza "$@")\" >/dev/null"
+			>&2 echo "Setting CA as authorized for $username@$server:$port"
+			ssh -p $port "$username@$server" "tee -a \$HOME/.ssh/authorized_keys <<<\"$(_authorized_key_ca_stanza "$@")\" >/dev/null"
 			;;
 	esac
 }
 
-function knownhosts_ca_stanza() {
+function _authorized_key_ca_stanza() {
+	local IFS=","
+	local principals="$*"
+	unset IFS
+	if [[ -n "$principals" ]]; then
+		principals=" principals=\"$principals\""
+	fi
+	local ca_pub="$(cat "$SSHCA_ROOT/ca.pub")"
+	echo "cert-authority$principals $ca_pub"
+}
+
+function _knownhosts_ca_stanza() {
 	local hosts="$*"
 	if [[ -z "$hosts" ]]; then
 		hosts="*"
@@ -166,12 +167,12 @@ function find_ca_root() {
 		return 0
 	fi
 
-	echo "SSH CA not set up. Run $(basename "$0") setup"
+	>&2 echo "SSH CA not set up. Run $(basename "$0") setup"
 	return 1
 }
 
 function trustconfig() {
-	authorized_key_ca_stanza "$1"
+	_authorized_key_ca_stanza "$1"
 	shift
 	knownhosts_ca_stanza "$1"
 }
@@ -238,18 +239,18 @@ function main() {
 				type -t srm >/dev/null 2>&1 && removal_command="srm"
 				"$removal_command" -r "$SSHCA_ROOT"
 			else
-				echo "Not deleting $SSHCA_ROOT"
+				>&2 echo "Not deleting $SSHCA_ROOT"
 			fi
 			exit $?
 			;;
 		-?|-h|--help|help|"")
-			show_usage "$@"
+			>&2 show_usage "$@"
 			exit $?
 			;;
 		*)
-			echo "Unknown command: $subcommand"
-			echo ""
-			show_usage
+			>&2 echo "Unknown command: $subcommand"
+			>&2 echo ""
+			>&2 show_usage
 			exit 2
 			;;
 	esac
