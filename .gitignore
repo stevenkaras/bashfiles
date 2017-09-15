@@ -3,4 +3,5 @@
 .profile
 .bash_profile
 .bashrc
+.bash_features
 .vim/.netrwhist
