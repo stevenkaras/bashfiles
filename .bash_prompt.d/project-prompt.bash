@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 # USAGE: __transcend_root SPECIAL_DIR
 #
@@ -95,4 +96,7 @@ function project_update_name() {
   PROJECT_PATH=$(project_path)
   PROJECT_ROOT=$(project_root)
 }
-CHDIR_COMMAND="project_update_name;${CHDIR_COMMAND}"
+
+if [[ ! "$CHDIR_COMMAND" == *"project_update_name"* ]]; then
+  CHDIR_COMMAND="project_update_name${CHDIR_COMMAND:+;$CHDIR_COMMAND}"
+fi
