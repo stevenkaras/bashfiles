@@ -47,7 +47,7 @@ function do_install() {
 		fi
 		git clone https://github.com/stevenkaras/bashfiles.git "$HOME/bashfiles"
 		[[ $? != 0 ]] && return $?
-		~/bashfiles/install_bashfiles.bash
+		"$HOME"/bashfiles/install_bashfiles.bash
 		return $?
 	fi
 
@@ -106,8 +106,9 @@ function do_install() {
 		do_ipython_install
 	fi
 
-	# copy the gitconfig in as a file, not symlinked (because it is expected to change)
-	[[ ! -e "$HOME/.gitconfig" ]] && cp "$ROOTDIR/.gitconfig" "$HOME/.gitconfig"
+	# copy over templates
+	[[ ! -e "$HOME/.gitconfig" ]] && cp "$ROOTDIR/templates/.gitconfig" "$HOME/.gitconfig"
+	[[ ! -e "$HOME/.bash_features" ]] && cp "$ROOTDIR/templates/.bash_features" "$HOME/.bash_features"
 
 	# symlink the local profile files into the repo for convenience
 	[[ -f "$HOME/.profile" ]] && ln -s -n "$HOME/.profile" "$ROOTDIR/.profile" 2>/dev/null
