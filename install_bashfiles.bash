@@ -113,6 +113,7 @@ function do_install() {
 	[[ -f "$HOME/.profile" ]] && ln -s -n "$HOME/.profile" "$ROOTDIR/.profile" 2>/dev/null
 	[[ -f "$HOME/.bash_profile" ]] && ln -s -n "$HOME/.bash_profile" "$ROOTDIR/.bash_profile" 2>/dev/null
 	[[ -f "$HOME/.bashrc" ]] && ln -s -n "$HOME/.bashrc" "$ROOTDIR/.bashrc" 2>/dev/null
+	[[ -f "$HOME/.bash_features" ]] && ln -s -n "$HOME/.bash_features" "$ROOTDIR/.bash_features" 2>/dev/null
 
 	return 0
 }

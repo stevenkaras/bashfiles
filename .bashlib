@@ -16,6 +16,10 @@ if [[ ! "${BASH_VERSION:0:3}" < "4.2" ]]; then
     shopt -s dirspell
 fi
 
+if [[ -f "$HOME"/.bash_features ]]; then
+	. "$HOME"/.bash_features
+fi
+
 # Alias definitions
 if [[ -f "$HOME"/.bash_aliases ]]; then
     . "$HOME"/.bash_aliases
