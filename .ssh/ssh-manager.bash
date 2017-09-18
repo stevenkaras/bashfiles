@@ -59,13 +59,21 @@ function compile_file() {
 
 function push_config() {
 	local compiled_config="$(compile_file "$PWD/config/$1")"
-	scp "$compiled_config" "$1:.ssh/config"
+	if [[ "${1##*@}" == "localhost" && "${1%@*}" == "$USER" ]]; then
+		cp "$compiled_config" "$HOME/.ssh/config"
+	else
+		scp "$compiled_config" "$1:.ssh/config"
+	fi
 	rm "$compiled_config"
 }
 
 function push_authorized_keys() {
 	local compiled_authorized_keys="$(compile_file "$PWD/authorized_keys/$1")"
-	scp "$compiled_authorized_keys" "$1:.ssh/authorized_keys"
+	if [[ "${1##*@}" == "localhost" && "${1%@*}" == "$USER" ]]; then
+		cp "$compiled_authorized_keys" "$HOME/.ssh/authorized_keys"
+	else
+		scp "$compiled_authorized_keys" "$1:.ssh/authorized_keys"
+	fi
 	rm "$compiled_authorized_keys"
 }
 
