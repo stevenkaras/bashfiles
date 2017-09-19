@@ -12,9 +12,16 @@ function _find_current_network() {
 		iwgetid -r
 		return 0
 	fi
+
 	# Fall back on nm-tool
 	if type -t nm-tool >/dev/null; then
 		nm-tool | awk 'f&&/\*/{ssid = substr($1, 2, length($1) - 2); print ssid};/Wireless Access Points \(\* = current AP\)/{f=1}'
+		return 0
+	fi
+
+	# Mac uses airport
+	if [[ -x /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport ]]; then
+		/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I | awk '/ SSID/ {print substr($0, index($0, $2))}'
 		return 0
 	fi
 
@@ -25,6 +32,13 @@ function _find_current_network() {
 function _find_network_pass() {
 	if [[ -f "/etc/NetworkManager/system-connections/$1" ]]; then
 		sudo cat "/etc/NetworkManager/system-connections/$1" | grep psk= | cut -d= -f 2
+		return 0
+	fi
+
+	if type -t security >/dev/null; then
+		security find-generic-password -wa "$1"
+		# TODO: check success
+		return 0
 	fi
 
 	echo 'Unable to discover current wireless network password' 1>&2
