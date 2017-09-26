@@ -14,13 +14,21 @@
   ls = ls-files
   act = for-each-ref --sort=-committerdate refs/heads/
   # show files ignored by git
-  ign = ls-files -o -i --exclude-standard
+  ignored = ls-files -o -i --exclude-standard
   force-pull = !git fetch && git reset --hard @{u}
   dangling-commits = !git fsck --dangling | awk '/dangling commit/ { print $3 }'
 
   # inspired by Human Git Aliases (http://gggritso.com/human-git-aliases)
   unstage = reset -q HEAD --
   discard = checkout --
+
+  # brazingly stolen from http://blog.apiaxle.com/post/handy-git-tips-to-stop-you-getting-fired/
+  assume = update-index --assume-unchanged
+  unassume = update-index --no-assume-unchanged
+  assumed = "!git ls-files -v | grep ^h | cut -c 3-"
+
+  # fixed variant of http://caiustheory.com/git-git-git-git-git/
+  git = "!f() { git $@; }; f"
 
   # show commits made directly to this branch
   direct = log --first-parent --no-merges
