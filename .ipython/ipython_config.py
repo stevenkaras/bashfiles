@@ -7,6 +7,7 @@ c.InteractiveShellApp.setdefault('exec_lines', [])
 c.InteractiveShellApp.exec_lines.extend([
     'import sys, time, dis, os',
 ])
+c.TerminalInteractiveShell.confirm_exit = False
 
 import IPython
 if IPython.version_info > (4,0,0):
