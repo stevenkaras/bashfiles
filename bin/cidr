@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+import ipaddress
+import argparse
+
+
+def cidr_info(address):
+    return dict(
+        cidr = address,
+        netname = address.network_address,
+        broadcast = address.broadcast_address,
+        num_hosts = address.num_addresses,
+    )
+
+
+def render_cidr_report(info):
+    return '\n'.join(l.strip() for l in """
+        CIDR: {cidr}
+        Network Name: {netname}
+        Broadcast Address: {broadcast}
+        Number of hosts: {num_hosts}
+    """.split('\n')).format(**info).strip()
+
+
+def main():
+    parser = argparse.ArgumentParser(description = 'Gives information about a network')
+    parser.add_argument('network', help = 'Either an IPv4 address or network')
+    args = parser.parse_args()
+
+    info = cidr_info(ipaddress.ip_network(args.network, strict = False))
+    print(render_cidr_report(info))
+
+
+if __name__ == '__main__':
+    main()
