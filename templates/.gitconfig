@@ -28,7 +28,7 @@
   assumed = "!git ls-files -v | grep ^h | cut -c 3-"
 
   # fixed variant of http://caiustheory.com/git-git-git-git-git/
-  git = "!f() { git $@; }; f"
+  git = !f() { git "$@"; }; f
 
   # show commits made directly to this branch
   direct = log --first-parent --no-merges
