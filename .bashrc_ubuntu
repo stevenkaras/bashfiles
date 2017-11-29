@@ -2,7 +2,9 @@
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
-alias notify='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$1"'
+function notify() {
+	notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$@"
+}
 
 alias run_upgrades='sudo apt-get update && sudo apt-get dist-upgrade -y'
 
@@ -10,3 +12,12 @@ if [[ -x /usr/bin/lesspipe ]]; then
 	export LESS="$LESS -R"
 	eval "$(SHELL=/bin/sh lesspipe)"
 fi
+
+function topswap() {
+	for file in /proc/*/status ; do awk '/VmSwap|^Pid/{printf $2 " " $3}END{ print ""}' "$file"; done | sort -k 2 -n -r | less
+}
+
+function sizeof() {
+	local file="$1"
+	du -sh "$file" | sort -r -h | head -10
+}
