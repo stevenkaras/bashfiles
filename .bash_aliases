@@ -50,10 +50,11 @@ function explain {
 }
 
 function sshmux() {
-    ssh -t "$@" tmux new -A -s "$USER"
+    # shellcheck disable=SC2029
+    ssh -t "$@" tmux -L "$USER" new -A -s "$USER"
 }
 function moshmux() {
-    mosh "$@" -- tmux new -A -s "$USER"
+    mosh "$@" -- tmux -L "$USER" new -A -s "$USER"
 }
 alias mux='tmuxinator'
 alias va='$VISUAL ~/.bash_aliases'
