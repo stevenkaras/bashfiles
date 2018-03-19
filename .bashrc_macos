@@ -5,3 +5,4 @@ function notify() {
 }
 
 alias lstat='stat -L'
+alias trim_trailing_spaces='sed -i "" -E -e '"'"'s/[[:space:]]*$//'"'"''
