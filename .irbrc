@@ -47,3 +47,19 @@ class String
     return self.chars.map(&:ord).map{|c|c.to_s(16)}.join.to_i(16)
   end
 end
+
+class Hash
+  def to_schema
+    self.reduce({}) do |result, item|
+      result[item[0]] = item[1].class
+      result[item[0]] = item[1].to_schema if item[1].respond_to? :to_schema
+      result
+    end
+  end
+end
+
+module Enumerable
+  def to_schema
+    self.map{|item| item.respond_to?(:to_schema) ? item.to_schema : item.class}.uniq
+  end
+end
