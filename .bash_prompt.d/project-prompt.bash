@@ -45,11 +45,12 @@ function project_root() {
   local gitroot="$(git rev-parse --show-toplevel 2>/dev/null)"
   if [ ! -z "$gitroot" ]; then
     result="$(__project_resolve_symlinks "$gitroot" "$PWD")"
-  else
-    local svnroot=$(__transcend_root .svn)
-    if [ ! -z "$svnroot" ]; then
-      result=$svnroot
-    fi
+  # else
+    # disabled because I don't use SVN, and it creates a ton of extra process calls
+    # local svnroot=$(__transcend_root .svn)
+    # if [ ! -z "$svnroot" ]; then
+    #   result=$svnroot
+    # fi
   fi
 
   if [ "$result" = "." ]; then
