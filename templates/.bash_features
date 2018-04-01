@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034
 
-export BASHFEATURE_DIRENV_ENABLED=false
+BASHFEATURE_DIRENV_ENABLED=false

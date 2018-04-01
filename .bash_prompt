@@ -12,11 +12,11 @@ done
 PROMPT_CHUNK_SIMPLE="\[\e[${PREFERRED_COLOR:-33}m\]$(__remote_host)"
 
 # add git to the prompt
-export GIT_PS1_SHOWDIRTYSTATE=true
-export GIT_PS1_SHOWSTASHSTATE=true
-#export  GIT_PS1_SHOWUPSTREAM="false"
-export GIT_PS1_SHOWUNTRACKEDFILES=true
-export GIT_PS1_SHOWBRANCH=true
+GIT_PS1_SHOWDIRTYSTATE=true # shellcheck disable=SC2034
+GIT_PS1_SHOWSTASHSTATE=true # shellcheck disable=SC2034
+# GIT_PS1_SHOWUPSTREAM="false"
+GIT_PS1_SHOWUNTRACKEDFILES=true # shellcheck disable=SC2034
+GIT_PS1_SHOWBRANCH=true # shellcheck disable=SC2034
 PROMPT_CHUNK_GIT="\[\e[91m\]\$(__git_ps1 ' (%s) ')"
 
 # add svn to the prompt
@@ -24,12 +24,12 @@ PROMPT_CHUNK_GIT="\[\e[91m\]\$(__git_ps1 ' (%s) ')"
 # SVN_PS1_SHOWREVISION=
 # PS1="${PS1}\[\e[91m\]\$(__svn_ps1 ' (%s) ')"
 
-export PS1="$PROMPT_CHUNK_SIMPLE\$(project_ps1)$PROMPT_CHUNK_GIT\[\e[${PREFERRED_COLOR:-33}m\]\$ \[\e[m\]"
+PS1="$PROMPT_CHUNK_SIMPLE\$(project_ps1)$PROMPT_CHUNK_GIT\[\e[${PREFERRED_COLOR:-33}m\]\$ \[\e[m\]"
 
 # helper function to fallback on a simpler prompt for when git is slow #
 ##############################################################################
 function fallback_prompt() {
-	export PS1="$PROMPT_CHUNK_SIMPLE\$(project_ps1)\[\e[${PREFERRED_COLOR:-33}m\]\$ \[\e[m\]"
+	PS1="$PROMPT_CHUNK_SIMPLE\$(project_ps1)\[\e[${PREFERRED_COLOR:-33}m\]\$ \[\e[m\]"
 }
 
 # Change the terminal title when switching directories #

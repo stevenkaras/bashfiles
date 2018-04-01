@@ -58,6 +58,6 @@ function _direnv_on_chdir() {
 }
 
 if [[ "$BASHFEATURE_DIRENV_ENABLED" == "true" && ! "$CHDIR_COMMAND" == *"_direnv_on_chdir"* ]]; then
-	export CHDIR_COMMAND="_direnv_on_chdir${CHDIR_COMMAND:+;$CHDIR_COMMAND}"
+	CHDIR_COMMAND="_direnv_on_chdir${CHDIR_COMMAND:+;$CHDIR_COMMAND}"
 	_direnv_on_chdir
 fi
