@@ -15,6 +15,11 @@ alias l='ls -CF'
 
 ## shell commands ##
 ####################
+
+# https://askubuntu.com/questions/22037/aliases-not-available-when-using-sudo/22043#22043
+# expand aliases after sudo
+alias sudo='sudo '
+
 function ui_process() {
     if [ $# -eq 0 ]; then
         echo "USAGE: ui_process COMMAND [ARGS...]"
