@@ -36,11 +36,10 @@ function _is_tty_remote() {
 function _proot() {
 	# Based on a recursive version that depends on procfs I found on StackOverflow
 	local pid="$$"
-	local curpid=""
 	local name=""
 
 	while [[ "$pid" -ge 1 ]]; do
-		read -r curpid pid name < <(ps -o pid= -o ppid= -o comm=  -p "$pid")
+		read -r pid name < <(ps -o ppid= -o comm=  -p "$pid")
 		if [[ "$name" == "${1:-sshd}"* ]]; then
 			return 0
 		fi
