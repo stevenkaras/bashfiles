@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 function _current_tty() {
 	# tmux confounds this, since it's a multiplexer. We need to find the client tty with the latest activity
@@ -22,8 +23,9 @@ function _is_tty_remote() {
 			local returnval=$?
 			return $returnval
 		fi
-		# this can happen if we've su'd inside tmux, so just assume it's remote
-		return 0
+		# this can happen if we've su'd inside tmux
+		# but it can also happen if we're running on a system with systemd, so assume we're local
+		return 1
 	elif [[ "$from" =~ :[[:digit:]]* ]]; then
 		return 1
 	elif [[ "$from" == "-" ]]; then
