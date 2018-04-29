@@ -6,9 +6,9 @@ function _search_history() {
 		return 2
 	fi
 
-	#TODO: figure out how to list only the commands, or at least make cut more intelligent
 	history -n
-	history | cut -c30- | grep -e "$@" | sort | uniq -c | sort -n -r | head
+	# TODO: figure out how to get history to only emit commands without entry numbers
+	HISTTIMEFORMAT="" history | awk '{$1=""; sub(/^[ \t]+/, ""; print $0}' | grep -e "$@" | sort | uniq -c | sort -n -r | head
 }
 
 function show_usage() {
