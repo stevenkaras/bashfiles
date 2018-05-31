@@ -92,7 +92,7 @@ function do_install() {
 	for binary in "$ROOTDIR"/bin/*; do
 		ln -s -n "$binary" "$HOME/bin/$(basename "$binary")" 2>/dev/null
 	done
-	for ssh_binary in "$ROOTDIR"/.ssh/*.bash; do
+	for ssh_binary in "$ROOTDIR"/ssh/*.bash; do
 		ln -s -n "$ssh_binary" "$HOME/bin/$(basename "${ssh_binary%%.bash}")" 2>/dev/null
 	done
 
