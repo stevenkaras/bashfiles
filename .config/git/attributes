@@ -1,0 +1,2 @@
+*.py diff=python
+*.pyx diff=python gitlab-language=python

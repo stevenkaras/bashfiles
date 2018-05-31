@@ -97,7 +97,7 @@ function do_install() {
 	done
 
 	# other files to symlink
-	for otherfile in .agignore .tmux.conf .tmux_profile .gitignore_global .vim .irbrc .psqlrc .lessfilter .inputrc; do
+	for otherfile in .agignore .tmux.conf .tmux_profile .vim .irbrc .psqlrc .lessfilter .inputrc; do
 		ln -s -n "$ROOTDIR/$otherfile" "$HOME/$otherfile" 2>/dev/null
 	done
 
@@ -106,9 +106,22 @@ function do_install() {
 		do_ipython_install
 	fi
 
+	# Migrate over some stuff to XDG style
+	[[ -z "$XDG_CONFIG_HOME" ]] && export XDG_CONFIG_HOME="$HOME/.config"
+
+	# git: To be removed no earlier than 20190601
+	mkdir -p "$XDG_CONFIG_HOME/git"
+	[[ -e "$HOME/.gitconfig" ]] && mv "$HOME/.gitconfig" "$XDG_CONFIG_HOME/git/config"
+
+	# symlink XDG configs
+	remove_broken_symlinks "$XDG_CONFIG_HOME/git"
+	ln -s -n "$ROOTDIR/.config/git/attributes" "$XDG_CONFIG_HOME/git/attributes" 2>/dev/null
+	ln -s -n "$ROOTDIR/.config/git/ignore" "$XDG_CONFIG_HOME/git/ignore" 2>/dev/null
+
 	# copy over templates
-	[[ ! -e "$HOME/.gitconfig" ]] && cp "$ROOTDIR/templates/.gitconfig" "$HOME/.gitconfig"
 	[[ ! -e "$HOME/.bash_features" ]] && cp "$ROOTDIR/templates/.bash_features" "$HOME/.bash_features"
+	mkdir -p "$XDG_CONFIG_HOME/git"
+	[[ ! -e "$XDG_CONFIG_HOME/git/config" ]] && cp "$ROOTDIR/templates/.config/git/config" "$XDG_CONFIG_HOME/git/config"
 
 	# symlink the local profile files into the repo for convenience
 	[[ -f "$HOME/.profile" ]] && ln -s -n "$HOME/.profile" "$ROOTDIR/.profile" 2>/dev/null
