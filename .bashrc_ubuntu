@@ -6,7 +6,12 @@ function notify() {
 	notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$@"
 }
 
-alias run_upgrades='sudo apt-get update && sudo apt-get dist-upgrade -y'
+
+if [[ "$(lsb_release -s -c)" == "xenial" ]]; then
+    alias run_upgrades='sudo apt update && sudo apt dist-upgrade -y --autoremove'
+else
+    alias run_upgrades='sudo apt-get update && sudo apt-get dist-upgrade -y --autoremove'
+fi
 
 if [[ -x /usr/bin/lesspipe ]]; then
 	export LESS="$LESS -R"
