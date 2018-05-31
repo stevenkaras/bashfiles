@@ -88,10 +88,12 @@ function show_usage() {
 	local prog
 	prog="$(basename "$0")"
 	cat <<-HELPMESSAGE
-		  $prog init                         # setup a managed set of servers
-		  $prog push                         # push the configuration and authorized keys to all configured servers
-		  $prog push_config SERVER           # push the ssh_config to the given server
-		  $prog push_authorized_keys SERVER  # push the authorized_keys to the given server
+		  $prog init                            # setup a managed set of servers
+		  $prog push [-s] [SERVER]              # push the configuration and authorized keys to all configured servers
+		  $prog compile_config SERVER           # compile the ssh_config for the given server
+		  $prog push_config SERVER              # push the ssh_config to the given server
+		  $prog compile_authorized_keys SERVER  # compile the authorized_keys for the given server
+		  $prog push_authorized_keys SERVER     # push the authorized_keys to the given server
 	HELPMESSAGE
 	if [[ "$1" == "-v" || "$1" == "--verbose" ]]; then
 		cat <<-VERBOSEHELP
@@ -112,6 +114,30 @@ function main() {
 		setup|init)
 			init_manager "$@"
 			exit $?
+			;;
+		compile_config)
+			local compiled_config
+			local success
+			compiled_config="$(compile_file "$PWD/config/$1")"
+			success=$?
+			if [[ $success -ne 0 ]]; then
+				exit $success
+			fi
+			cat "$compiled_config"
+			rm "$compiled_config"
+			exit 0
+			;;
+		compile_authorized_keys)
+			local compiled_authorized_keys
+			local success
+			compiled_authorized_keys="$(compile_file "$PWD/authorized_keys/$1")"
+			success=$?
+			if [[ $success -ne 0 ]]; then
+				exit $success
+			fi
+			cat "$compiled_authorized_keys"
+			rm "$compiled_authorized_keys"
+			exit 0
 			;;
 		push)
 			push_all "$@"
