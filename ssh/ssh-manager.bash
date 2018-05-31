@@ -39,7 +39,11 @@ function distribute() {
 		;;
 	esac
 
-	enumerate_servers "$1" | $do_with "$0" "push_$1" {}
+	if [[ $# -eq 1 ]]; then
+		enumerate_servers "$1" | $do_with "$0" "push_$1" {}
+	else
+		echo "$@" | $do_with "$0" "push_$1" {}
+	fi
 }
 
 function push_all() {
