@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 function _platform() {
-	local kernel="$(uname -s)"
+	local kernel
+	kernel="$(uname -s)"
 	case "$kernel" in
 		Linux)
 			echo "ubuntu"
@@ -14,8 +15,10 @@ function _platform() {
 
 function do_ipython_install() {
 	# determine the folder this script is in
-	local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-	local IPYTHON_PROFILE_DIR="$(ipython locate profile)"
+	local ROOTDIR
+	ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	local IPYTHON_PROFILE_DIR
+	IPYTHON_PROFILE_DIR="$(ipython locate profile)"
 	if [[ $? != 0 ]]; then
 		return
 	fi
@@ -26,16 +29,18 @@ function do_ipython_install() {
 }
 
 function remove_broken_symlinks() {
-  local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-  local target="$1"
+	local ROOTDIR
+	ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	local target="$1"
 
-  shopt -s dotglob
-  for file in "$target/"*; do
-    if [[ -h "$file" && ! -e "$file" ]]; then
-      local symlink_target="$(readlink -n "$file")"
-      [[ "$symlink_target" = "$ROOTDIR"/* ]] && rm "$file"
-    fi
-  done
+	shopt -s dotglob
+	for file in "$target/"*; do
+		if [[ -h "$file" && ! -e "$file" ]]; then
+			local symlink_target
+			symlink_target="$(readlink -n "$file")"
+			[[ "$symlink_target" = "$ROOTDIR"/* ]] && rm "$file"
+		fi
+	done
 }
 
 function do_install() {
@@ -45,24 +50,26 @@ function do_install() {
 			echo "$HOME/bashfiles already exists. Perhaps you meant to run $HOME/bashfiles/install_bashfiles.bash?"
 			return 1
 		fi
-		git clone https://github.com/stevenkaras/bashfiles.git "$HOME/bashfiles"
-		[[ $? != 0 ]] && return $?
+		git clone https://github.com/stevenkaras/bashfiles.git "$HOME/bashfiles" && return $?
 		"$HOME"/bashfiles/install_bashfiles.bash
 		return $?
 	fi
 
 	# determine the folder this script is in
-	local ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	local ROOTDIR
+	ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 	remove_broken_symlinks "$HOME"
 	for bashfile in "$ROOTDIR"/.bash*; do
-		local bashfilename="$(basename "$bashfile")"
+		local bashfilename
+		bashfilename="$(basename "$bashfile")"
 		# don't accidentally create recursive symlinks
 		if [[ ! -h "$bashfile" ]]; then
 			ln -s -n "$bashfile" "$HOME/$bashfilename" 2>/dev/null
 		fi
 	done
-	local platform=$(_platform)
+	local platform
+	platform=$(_platform)
 	# inject the bashfiles
 	if ! grep -E "$HOME/.bashrc" -e "(\.|source)\s+('|\")?($HOME|\\\$HOME)/.bashlib" >/dev/null; then
 		cat <<-BASH >> "$HOME/.bashrc"
