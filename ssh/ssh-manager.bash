@@ -53,7 +53,8 @@ function push_all() {
 }
 
 function compile_file() {
-	local TMPFILE="$(mktemp)"
+	local TMPFILE
+	TMPFILE="$(mktemp)"
 	local source_file="$1"
 	pushd "$(dirname "$source_file")" >/dev/null 2>&1
 	m4 <"$(basename "$source_file")" >"$TMPFILE"
@@ -62,7 +63,8 @@ function compile_file() {
 }
 
 function push_config() {
-	local compiled_config="$(compile_file "$PWD/config/$1")"
+	local compiled_config
+	compiled_config="$(compile_file "$PWD/config/$1")"
 	if [[ "${1##*@}" == "localhost" && "${1%@*}" == "$USER" ]]; then
 		cp "$compiled_config" "$HOME/.ssh/config"
 	else
@@ -72,7 +74,8 @@ function push_config() {
 }
 
 function push_authorized_keys() {
-	local compiled_authorized_keys="$(compile_file "$PWD/authorized_keys/$1")"
+	local compiled_authorized_keys
+	compiled_authorized_keys="$(compile_file "$PWD/authorized_keys/$1")"
 	if [[ "${1##*@}" == "localhost" && "${1%@*}" == "$USER" ]]; then
 		cp "$compiled_authorized_keys" "$HOME/.ssh/authorized_keys"
 	else
@@ -82,7 +85,8 @@ function push_authorized_keys() {
 }
 
 function show_usage() {
-	local prog="$(basename "$0")"
+	local prog
+	prog="$(basename "$0")"
 	cat <<-HELPMESSAGE
 		  $prog init                         # setup a managed set of servers
 		  $prog push                         # push the configuration and authorized keys to all configured servers
@@ -121,7 +125,7 @@ function main() {
 			push_authorized_keys "$@"
 			exit $?
 			;;
-		-?|-h|--help|help|"")
+		-\?|-h|--help|help|"")
 			show_usage "$@"
 			exit $?
 			;;
