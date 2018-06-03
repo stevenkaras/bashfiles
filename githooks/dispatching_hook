@@ -1,30 +1,21 @@
 #!/usr/bin/env bash
 
+# This is a generic hook that is meant to invoke multiple hooks,
+# handling both arguments, stdin, and breaking on the first error
+
+# This makes it easy to write hooks that do exactly one thing
+
 HOOK_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# source any hooks found in the given path, if it exists
-# if the path is a file, source it
-function run_hooks() {
-	local HOOKS="$1"
-	if [[ -f "$HOOKS" && -x "$HOOKS" ]]; then
-		"$HOOKS" "$@" || exit $?
-	elif [[ -d "$HOOKS" ]]; then
-		for HOOK in "$HOOKS/*"; do
-			if [[ -f "$HOOK" && -x "$HOOK" ]]; then
-				"$HOOK" "$@" || exit $?
-			fi
-		done
-	fi
-}
-
-# source user hooks
-run_hooks "$HOME/.githooks/$HOOK_NAME"
-
-# run project hooks
-PROJECT_ROOT="$(git rev-parse --show-toplevel)"
-run_hooks "$PROJECT_ROOT/bin/githooks/$HOOK_NAME"
-run_hooks "$PROJECT_ROOT/bin/githooks/$HOOK_NAME.hook"
-run_hooks "$PROJECT_ROOT/.githooks/$HOOK_NAME"
-run_hooks "$PROJECT_ROOT/.githooks/$HOOK_NAME.hook"
 GIT_DIR="$(git rev-parse --git-dir)"
-run_hooks "$GIT_DIR/hooks/$HOOK_NAME.local"
+HOOKS="$GIT_DIR/hooks/$HOOK_NAME.d"
+if [[ -d "$HOOKS" ]]; then
+    stdin="$(cat; echo x)"
+    for HOOK in "$HOOKS"/*; do
+        if [[ -f "$HOOK" && -x "$HOOK" ]]; then
+            printf "%s" "${stdin%x}" | "$HOOK" "$@" || exit $?
+        fi
+    done
+fi
+
+exit 0

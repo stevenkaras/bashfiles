@@ -5,27 +5,42 @@
 # The intention is that this script is copied from Steven Karas's bashfiles repo (https://github.com/stevenkaras/bashfiles)
 # into your project. Please leave this notice in the file so you can find the most up to date version of this script.
 
-#TODO: check if we're in a git repo or not
-
 HOOKS_DIR="$(git rev-parse --git-dir)/hooks"
-HOOKS="applypatch-msg pre-applypatch post-applypatch pre-commit prepare-commit-msg commit-msg post-commit pre-rebase post-checkout post-merge pre-receive update post-receive post-update pre-auto-gc pre-svn-rebase post-svn-rebase pre-svn-dcommit post-svn-dcommit"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+function remove_broken_symlinks() {
+    local ROOTDIR
+    ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    local target="$1"
+
+    for file in "$target/"*; do
+        if [[ -h "$file" && ! -e "$file" ]]; then
+            local symlink_target
+            symlink_target="$(readlink -n "$file")"
+            [[ "$symlink_target" = "$ROOTDIR"/* ]] && rm "$file"
+        fi
+    done
+}
 
 # install the given hook
 function install_hook() {
     local hook_name="$1"
-    local hook_path="$HOOKS_DIR/$hook_name"
+    local hook_path="$HOOKS_DIR/${hook_name%%.*}"
     if [[ -e "$hook_path" ]]; then
-        # don't overwrite an existing hook
         return 0
     fi
-    if [[ ! -e "$DIR/$hook_name" ]]; then
-        return 0
+    if [[ -e "$DIR/$hook_name" ]]; then
+        ln -snfT "$DIR/$hook_name" "$hook_path"
     fi
-
-    ln -sf "$DIR/$hook_name" "$hook_path"
+    if [[ -d "$DIR/$hook_name" ]]; then
+        ln -snfT "$DIR/$hook_name" "$hook_path.d"
+        ln -snfT dispatching_hook "$hook_path"
+    fi
 }
 
-for hook in $HOOKS; do
-    install_hook "$hook"
+# remove any broken hooks
+remove_broken_symlinks "$HOOKS_DIR"
+
+for hook in "$DIR"/!("$(basename "${BASH_SOURCE[0]}")"); do
+    install_hook "$(basename "$hook")"
 done
