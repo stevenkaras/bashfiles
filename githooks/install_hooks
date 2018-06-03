@@ -5,6 +5,8 @@
 # The intention is that this script is copied from Steven Karas's bashfiles repo (https://github.com/stevenkaras/bashfiles)
 # into your project. Please leave this notice in the file so you can find the most up to date version of this script.
 
+shopt -s extglob
+
 HOOKS_DIR="$(git rev-parse --git-dir)/hooks"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
