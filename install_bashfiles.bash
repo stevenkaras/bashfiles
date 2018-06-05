@@ -119,6 +119,7 @@ function do_install() {
 	# git: To be removed no earlier than 20190601
 	mkdir -p "$XDG_CONFIG_HOME/git"
 	[[ -e "$HOME/.gitconfig" ]] && mv "$HOME/.gitconfig" "$XDG_CONFIG_HOME/git/config"
+	[[ ! -e "$HOME/.gitignore_global" && "$(git config --global core.excludesfile)" == "~/.gitignore_global" ]] && git config --global --unset core.excludesfile
 
 	# symlink XDG configs
 	remove_broken_symlinks "$XDG_CONFIG_HOME/git"
