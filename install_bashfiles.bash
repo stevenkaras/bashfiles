@@ -122,14 +122,16 @@ function do_install() {
 	[[ ! -e "$HOME/.gitignore_global" && "$(git config --global core.excludesfile)" == "~/.gitignore_global" ]] && git config --global --unset core.excludesfile
 
 	# symlink XDG configs
+	mkdir -p "$XDG_CONFIG_HOME/git"
 	remove_broken_symlinks "$XDG_CONFIG_HOME/git"
 	ln -s -n "$ROOTDIR/.config/git/attributes" "$XDG_CONFIG_HOME/git/attributes" 2>/dev/null
 	ln -s -n "$ROOTDIR/.config/git/ignore" "$XDG_CONFIG_HOME/git/ignore" 2>/dev/null
 
 	# copy over templates
 	[[ ! -e "$HOME/.bash_features" ]] && cp "$ROOTDIR/templates/.bash_features" "$HOME/.bash_features"
-	mkdir -p "$XDG_CONFIG_HOME/git"
+	ln -s -n "$HOME/.bash_features" "$ROOTDIR/.bash_features" # convenience symlink
 	[[ ! -e "$XDG_CONFIG_HOME/git/config" ]] && cp "$ROOTDIR/templates/.config/git/config" "$XDG_CONFIG_HOME/git/config"
+	ln -s -n "$XDG_CONFIG_HOME/git/config" "$ROOTDIR/.config/git/config" # convenience symlink
 
 	# symlink the local profile files into the repo for convenience
 	[[ -f "$HOME/.profile" ]] && ln -s -n "$HOME/.profile" "$ROOTDIR/.profile" 2>/dev/null
