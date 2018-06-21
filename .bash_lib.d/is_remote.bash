@@ -14,7 +14,7 @@ function _current_tty() {
 function _is_tty_remote() {
 	# check if the given tty is connected to a remote user
 	local tty_name="${1##/dev/}"
-	local from="$(w -h | tr -s ' ' | cut -d' ' -f2-3 | grep -e "^$tty_name" | cut -d' ' -f 2)"
+	local from="$(w -h | tr -s ' ' | cut -d' ' -f2-3 | grep -e "^$tty_name " | cut -d' ' -f 2)"
 	if [[ -z "$from" ]]; then
 		# attempt to search for suffixes
 		local extra_chomped="${tty_name##tty}"
