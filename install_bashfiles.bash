@@ -129,9 +129,9 @@ function do_install() {
 
 	# copy over templates
 	[[ ! -e "$HOME/.bash_features" ]] && cp "$ROOTDIR/templates/.bash_features" "$HOME/.bash_features"
-	ln -s -n "$HOME/.bash_features" "$ROOTDIR/.bash_features" # convenience symlink
+	ln -s -n "$HOME/.bash_features" "$ROOTDIR/.bash_features" 2>/dev/null # convenience symlink
 	[[ ! -e "$XDG_CONFIG_HOME/git/config" ]] && cp "$ROOTDIR/templates/.config/git/config" "$XDG_CONFIG_HOME/git/config"
-	ln -s -n "$XDG_CONFIG_HOME/git/config" "$ROOTDIR/.config/git/config" # convenience symlink
+	ln -s -n "$XDG_CONFIG_HOME/git/config" "$ROOTDIR/.config/git/config" 2>/dev/null # convenience symlink
 
 	# symlink the local profile files into the repo for convenience
 	[[ -f "$HOME/.profile" ]] && ln -s -n "$HOME/.profile" "$ROOTDIR/.profile" 2>/dev/null
