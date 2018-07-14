@@ -131,8 +131,7 @@ function prepare_commands() {
 	local date file destination_path
 	while IFS= read -r -d '' file; do
 		# shellcheck disable=SC2034
-		date="$(date_for_file "${file}")"
-		(( $? == 0 )) || continue
+		date="$(date_for_file "${file}")" || continue
 
 		# see compile_pattern for why the eval is safe
 		destination_path="$(eval echo "${compiled_pattern}")"
@@ -155,11 +154,11 @@ function _test_prepare_commands() {
 	expected="mkdir -p '/path/to/archive/2018Q2'; mv '/some/other/dir/20180602 - Letter.pdf' '/path/to/archive/2018Q2/20180602 - Letter.pdf'"
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
-	actual="$(printf "20180602\x0020180706\x00" | prepare_commands "${pattern}")"
+	actual="$(printf "20180602\\x0020180706\\x00" | prepare_commands "${pattern}")"
 	expected="mkdir -p '2018Q2'; mv '20180602' '2018Q2/20180602'"$'\n'"mkdir -p '2018Q3'; mv '20180706' '2018Q3/20180706'"
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
-	actual="$(printf "notadatedfile\x0020180706\x00" | prepare_commands "${pattern}")"
+	actual="$(printf "notadatedfile\\x0020180706\\x00" | prepare_commands "${pattern}")"
 	expected="mkdir -p '2018Q3'; mv '20180706' '2018Q3/20180706'"
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 }
@@ -203,6 +202,7 @@ function organize() {
 	shift
 
 	local execution=bash
+	# shellcheck disable=SC2209
 	[[ -n "$is_dry_run" ]] && execution=cat
 
 	enumerate_files "$@" | prepare_commands "$(compile_pattern "${pattern}")" | $execution
