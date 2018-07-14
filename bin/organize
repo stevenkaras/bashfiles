@@ -108,6 +108,11 @@ function _test_compile_pattern() {
 	actual="$(eval echo "$(compile_pattern "%y %m %d")")"
 	expected="2018 06 02"
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
+
+	local date="20180602"
+	actual="$(eval echo "$(compile_pattern "%b %y")")"
+	expected="Jun 2018"
+	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 }
 
 
