@@ -263,7 +263,7 @@ function main() {
 			fi
 			exit $?
 			;;
-		-?|-h|--help|help|"")
+		-\?|-h|--help|help|"")
 			>&2 show_usage "$@"
 			exit $?
 			;;

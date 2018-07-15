@@ -2,7 +2,6 @@
 
 function autosign() {
 	local tmpfile
-	#TODO: need to audit ssh-ca/ssh-keygen for environment variables that may impact security
 	tmpfile="$(mktemp)" # for printing errors
 	[[ $? != 0 ]] && return 1
 
@@ -30,7 +29,7 @@ function trust() {
 	local ACME_ROOT="$SSHCA_ROOT/acme"
 	mkdir -p "$SSHCA_ROOT/acme"
 	cp "$1" "$ACME_ROOT"
-	local key_path="$ACME_ROOT/$(basename "$1")"
+	local key_path="$ACME_ROOT/${1##*/}"
 
 	local fingerprint
 	fingerprint="$(ssh-keygen -l -f "$key_path")"
@@ -135,7 +134,7 @@ function find_ca_root() {
 }
 
 function show_usage() {
-	local prog="$(basename "$0")"
+	local prog="${0##*/}"
 	cat <<-HELPMESSAGE
 		  $prog trust KEYFILE                 # Trust a key to be issued certificates automatically
 		  $prog revoke [KEYFILE|FINGERPRINT]  # Revoke a key, so it cannot be issued any more certificates
@@ -168,13 +167,13 @@ function main() {
 			exit $?
 			;;
 		-?|-h|--help|help|"")
-			show_usage "$@"
+			>&2 show_usage "$@"
 			exit $?
 			;;
 		*)
 			echo "Unknown command: $subcommand"
 			echo ""
-			show_usage
+			>&2 show_usage
 			exit 2
 			;;
 	esac
