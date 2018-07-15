@@ -48,18 +48,24 @@ iseconfig/
 ehthumbs.db
 Thumbs.db
 
+# Tooling generated files #
+###########################
+.sonar/
+.yardoc/
+.mypy_cache/
+.stfolder/
+.ipynb_checkpoints/
+.project/
+.pydevproject/
+
 # Temporary files #
 ###################
 *~
-.sonar/
-.yardoc/
 *.pid
-.ipynb_checkpoints/
-.bundle/
-.stfolder
 *.orig
 *.rej
 *.vcd
+.bundle/
 
 # My personal typical trash #
 #############################
