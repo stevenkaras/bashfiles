@@ -112,6 +112,109 @@ function _test_compile_pattern() {
 	local date="20180602"
 	actual="$(eval echo "$(compile_pattern "%b %y")")"
 	expected="Jun 2018"
+}
+
+
+function day_of_year() {
+	local date="$1"
+	local -i day_of_year=0
+	local -i year="${date:0:4}"
+	local -i month="10#${date:4:2}"
+	local -i day="10#${date:6:2}"
+
+	if (( month >= 3 )); then
+		# formula taken from https://en.wikipedia.org/wiki/Ordinal_date
+		# the idea is to count the number of days from march 1st
+		(( day_of_year = (306 * month - 914) / 10 + day + 59 ))
+		(( day_of_year += year % 4 == 0 && (year % 100 != 0 || year % 400 == 0) ))
+	elif (( month == 2 )); then
+		(( day_of_year = day + 31))
+	else
+		(( day_of_year = day ))
+	fi
+
+	echo $day_of_year
+}
+
+
+function _test_day_of_year() {
+	local actual expected date
+
+	return 0 # disabled exhaustive tests because they are slow
+
+	# exhaustive testing of all dates
+	for i in $(seq 1 366); do
+		date="$(date -u --date="20180101 + $i days" +%Y%m%d)"
+		actual="$(day_of_year "$date")"
+		expected="$(date -u --date="$date" +%-j)"
+		[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}:$date expected=${expected} actual=${actual}"
+	done
+	for i in $(seq 1 366); do
+		date="$(date -u --date="20160101 + $i days" +%Y%m%d)"
+		actual="$(day_of_year "$date")"
+		expected="$(date -u --date="$date" +%-j)"
+		[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}:$date expected=${expected} actual=${actual}"
+	done
+}
+
+
+# Convert a YYYYMMDD date into seconds since the epoch
+# This is surprisingly difficult to do in portable bash
+#
+# Arguments:
+#   date
+# Output:
+#   the number of seconds since the epoch for the midnight on the given date
+function date_to_epoch() {
+	# inspired by https://www.reddit.com/r/bash/comments/8y7uzz/portable_date_formatting/e28whvg/
+	# credit to u/whetu for pointing me in the direction of this solution, based upon:
+	# http://www.etalabs.net/sh_tricks.html
+	local date="$1"
+	local -i day_of_year=0
+	local -i year_offset="$(( 10#${date:0:4} - 1600 ))"
+	local -i month="10#${date:4:2}"
+	local -i day="10#${date:6:2}"
+
+	# inlined version of day_of_year, but skipping leap day accounting
+	if (( month >= 3 )); then
+		# formula adapted from https://en.wikipedia.org/wiki/Ordinal_date
+		# the idea is to count the number of days from march 1st
+		(( day_of_year = (306 * month - 914) / 10 + day + 59 ))
+	elif (( month == 2 )); then
+		(( day_of_year = day + 31))
+	else
+		(( day_of_year = day ))
+	fi
+
+	# 135140 is the number of days between 16000101 and 19700101.
+	# 1600 is used as the multiple-of-400 epoch here instead of 2000 since C-style division behaves badly with negative dividends
+	(( days_since_epoch = day_of_year + year_offset * 365 + year_offset / 4 - year_offset / 100 + year_offset / 400 - 135140 ))
+
+	echo $(( days_since_epoch * 24 * 60 * 60 ))
+}
+
+
+function _test_date_to_epoch() {
+	local actual expected
+
+	actual="$(date_to_epoch "20180602")"
+	expected='1527897600'
+	# expected="$(date +%s -u --date=20180602)"
+	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
+
+	actual="$(date_to_epoch "20181231")"
+	expected='1546214400'
+	# expected="$(date +%s -u --date=20181231)"
+	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
+
+	actual="$(date_to_epoch "20160301")"
+	expected='1456790400'
+	# expected="$(date +%s -u --date=20160301)"
+	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
+
+	actual="$(date_to_epoch "20161231")"
+	expected='1483142400'
+	# expected="$(date +%s -u --date=20161231)"
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 }
 
@@ -213,6 +316,8 @@ function run_self_tests() {
 	_test_date_for_file
 	_test_compile_pattern
 	_test_prepare_commands
+	_test_day_of_year
+	_test_date_to_epoch
 }
 
 
