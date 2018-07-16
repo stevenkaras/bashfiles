@@ -60,7 +60,7 @@ function _test_date_for_file() {
 
 
 # Compile the date pattern
-# Outputs a bash-compatible string intended to be eval'd in a scope with a variable named `date`.
+# Outputs a bash-compatible string intended to be eval'd in a scope with a variable named `epoch`.
 # Should safely quote the pattern, so this is intended to be secure.
 # Expected usage:
 #   eval echo "$(compile_pattern "%y/%m")"
@@ -74,44 +74,39 @@ function compile_pattern() {
 	local pattern="$1"
 	pattern="$(printf "%q" "${pattern}")"
 
-	pattern="${pattern//%y/'${date:0:4}'}"
-	pattern="${pattern//%m/'${date:4:2}'}"
-	pattern="${pattern//%b/'$(date -u --date="${date}" +%b)'}"
-	pattern="${pattern//%B/'$(date -u --date="${date}" +%B)'}"
-	pattern="${pattern//%d/'${date:6:2}'}"
-	pattern="${pattern//%q/'$(((10#${date:4:2} - 1) / 3 + 1))'}"
-	pattern="${pattern//%h/'$(((10#${date:4:2} - 1) / 6 + 1))'}"
-	pattern="${pattern//%G/'$(date -u --date="${date}" +%G)'}"
-	pattern="${pattern//%V/'$(date -u --date="${date}" +%V)'}"
+	pattern="${pattern//%y/%Y}" # I reject the concept of 2-digit years
+	pattern="${pattern//%q/'$(((10#$(printf "%(%m)T" "${epoch}") - 1) / 3 + 1))'}"
+	pattern="${pattern//%h/'$(((10#$(printf "%(%m)T" "${epoch}") - 1) / 6 + 1))'}"
 
-	echo "${pattern}"
+	echo '$(printf "'"%(${pattern})T"'" "${epoch}")'
 }
 
 
-# shellcheck disable=SC2016
+# shellcheck disable=SC2016,SC2034
 function _test_compile_pattern() {
 	local actual expected
 
 	actual="$(compile_pattern "%yQ%q")"
-	expected='${date:0:4}Q$(((10#${date:4:2} - 1) / 3 + 1))'
+	expected='$(printf "%(%YQ$(((10#$(printf "%(%m)T" "${epoch}") - 1) / 3 + 1)))T" "${epoch}")'
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	actual="$(compile_pattern "%y/%m - %B")"
-	expected='${date:0:4}/${date:4:2}\ -\ $(date -u --date="${date}" +%B)'
+	expected='$(printf "%(%Y/%m\ -\ %B)T" "${epoch}")'
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	actual="$(compile_pattern '$(echo hi)/%y')"
-	expected='\$\(echo\ hi\)/${date:0:4}'
+	expected='$(printf "%(\$\(echo\ hi\)/%Y)T" "${epoch}")'
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
-	local date="20180602"
+	local epoch="1527897600" # epoch for 20180602
 	actual="$(eval echo "$(compile_pattern "%y %m %d")")"
-	expected="2018 06 02"
+	expected='2018\ 06\ 02'
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
-	local date="20180602"
+	local epoch="1527897600" # epoch for 20180602
 	actual="$(eval echo "$(compile_pattern "%b %y")")"
-	expected="Jun 2018"
+	expected='Jun\ 2018'
+	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 }
 
 
@@ -231,10 +226,11 @@ function prepare_commands() {
 	local verbose_flag=""
 	(( verbosity > 0 )) && verbose_flag=" -v "
 	local compiled_pattern="$1"
-	local date file destination_path
+	local date epoch file destination_path
 	while IFS= read -r -d '' file; do
-		# shellcheck disable=SC2034
 		date="$(date_for_file "${file}")" || continue
+		# shellcheck disable=SC2034
+		epoch="$(date_to_epoch "${date}")"
 
 		# see compile_pattern for why the eval is safe
 		destination_path="$(eval echo "${compiled_pattern}")"
