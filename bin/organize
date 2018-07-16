@@ -266,23 +266,56 @@ function _test_prepare_commands() {
 # Enumerate the files to be organized
 #
 # Arguments:
-#   files - defaults to all files in the current directory
+#   files - defaults to reading files from stdin
 # Output:
 #   null-terminated file paths
 function enumerate_files() {
 	local files=("$@")
-	if (( $# == 0 )); then
-		# default to all files in the current directory
-		for file in ./* ./.*; do
-			[[ -f "${file}" ]] && printf '%s\0' "${file}"
-		done
+	if (( $# == 0 )) || [[ $# == 1 && "$1" == '-' ]]; then
+		if [[ -z "${stdin_null}" ]]; then
+			while read -r file; do
+				[[ -f "${file}" ]] && printf '%s\x00' "${file}"
+			done
+		else
+			while IFS= read -r -d "" file; do
+				[[ -f "${file}" ]] && printf '%s\x00' "${file}"
+			done
+		fi
 	else
 		for file in "${files[@]}"; do
-			[[ -f "${file}" ]] && printf '%s\0' "${file}"
+			[[ -f "${file}" ]] && printf '%s\x00' "${file}"
 		done
 	fi
 
 	return 0
+}
+
+function _test_enumerate_files() {
+	local actual expected pattern
+	debug=0
+
+	function _count_null_tokens() {
+		local -i count=0
+		while IFS= read -r -d '' token; do
+			(( count += 1 ))
+			(( debug > 0 )) && >&2 echo "count=$count; _=$token"
+		done
+		echo $count
+	}
+
+	actual="$(enumerate_files "$0" "$0" "$0" | _count_null_tokens)"
+	expected="3"
+	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
+
+	actual="$(printf '%s\n%s\n%s\n' "$0" "$0" "$0" | enumerate_files | _count_null_tokens)"
+	expected="3"
+	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
+
+	stdin_null=true
+	actual="$(printf '%s\x00%s\x00%s\x00' "$0" "$0" "$0" | enumerate_files | _count_null_tokens)"
+	expected="3"
+	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
+	unset stdin_null
 }
 
 
@@ -314,6 +347,7 @@ function run_self_tests() {
 	_test_prepare_commands
 	_test_day_of_year
 	_test_date_to_epoch
+	_test_enumerate_files
 }
 
 
@@ -325,6 +359,7 @@ function show_usage() {
 		Options:
 		  -n, --dry-run        only show what would be done, but don't actually do it
 		  -t, --test           run self-tests instead of organizing files
+		  -0, --null           files read from stdin are terminated by a null character instead of by whitespace
 		  -v, --verbose
 	HELPMESSAGE
 	if (( verbosity > 0 )); then
@@ -353,6 +388,9 @@ function main() {
 	local subcommand='organize "${args[@]}"'
 	while (( $# > 0 )); do
 		case "$1" in
+			-0|--null)
+				stdin_null=true
+				;;
 			-n|--dry-run)
 				is_dry_run=true
 				;;
