@@ -76,13 +76,13 @@ function compile_pattern() {
 
 	pattern="${pattern//%y/'${date:0:4}'}"
 	pattern="${pattern//%m/'${date:4:2}'}"
-	pattern="${pattern//%b/'$(date --date="${date}" +%b)'}"
-	pattern="${pattern//%B/'$(date --date="${date}" +%B)'}"
+	pattern="${pattern//%b/'$(date -u --date="${date}" +%b)'}"
+	pattern="${pattern//%B/'$(date -u --date="${date}" +%B)'}"
 	pattern="${pattern//%d/'${date:6:2}'}"
 	pattern="${pattern//%q/'$(((10#${date:4:2} - 1) / 3 + 1))'}"
 	pattern="${pattern//%h/'$(((10#${date:4:2} - 1) / 6 + 1))'}"
-	pattern="${pattern//%G/'$(date --date="${date}" +%G)'}"
-	pattern="${pattern//%V/'$(date --date="${date}" +%V)'}"
+	pattern="${pattern//%G/'$(date -u --date="${date}" +%G)'}"
+	pattern="${pattern//%V/'$(date -u --date="${date}" +%V)'}"
 
 	echo "${pattern}"
 }
@@ -97,7 +97,7 @@ function _test_compile_pattern() {
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	actual="$(compile_pattern "%y/%m - %B")"
-	expected='${date:0:4}/${date:4:2}\ -\ $(date --date="${date}" +%B)'
+	expected='${date:0:4}/${date:4:2}\ -\ $(date -u --date="${date}" +%B)'
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	actual="$(compile_pattern '$(echo hi)/%y')"
