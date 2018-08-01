@@ -113,6 +113,15 @@ function track() {
     notify "completed $*"
 }
 
+function mstime() {
+    local start end elapsedms
+    start="$(date +%s%N)"
+    command time -v "$@"
+    end="$(date +%s%N)"
+    elapsedms=$(( (end - start) / 1000000 ))
+    printf '\tTime taken: %sms\n' "$elapsedms"
+}
+
 ## version control ##
 #####################
 
