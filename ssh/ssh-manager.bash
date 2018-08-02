@@ -29,6 +29,9 @@ function enumerate_servers() {
 }
 
 function distribute() {
+	local action="$1"
+	shift
+
 	case "$1" in
 	-s|--seq|--sequential)
 		shift
@@ -39,17 +42,17 @@ function distribute() {
 		;;
 	esac
 
-	if [[ $# -eq 1 ]]; then
-		enumerate_servers "$1" | $do_with "$0" "push_$1" {}
+	if [[ $# -eq 0 ]]; then
+		enumerate_servers "$action" | $do_with "$0" "push_$action" {}
 	else
-		echo "$@" | $do_with "$0" "push_$1" {}
+		echo "$@" | $do_with "$0" "push_$action" {}
 	fi
 }
 
 function push_all() {
 	# push out the managed configurations/authorized keys
-	distribute "$@" authorized_keys
-	distribute "$@" config
+	distribute authorized_keys "$@"
+	distribute config "$@"
 }
 
 function compile_file() {
@@ -89,7 +92,7 @@ function show_usage() {
 	prog="$(basename "$0")"
 	cat <<-HELPMESSAGE
 		  $prog init                            # setup a managed set of servers
-		  $prog push [-s] [SERVER]              # push the configuration and authorized keys to all configured servers
+		  $prog push [-s] [SERVER, ...]         # push the configuration and authorized keys to all configured servers
 		  $prog compile_config SERVER           # compile the ssh_config for the given server
 		  $prog push_config SERVER              # push the ssh_config to the given server
 		  $prog compile_authorized_keys SERVER  # compile the authorized_keys for the given server
