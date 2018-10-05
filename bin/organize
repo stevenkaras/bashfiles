@@ -82,7 +82,7 @@ function compile_pattern() {
 }
 
 
-# shellcheck disable=SC2016,SC2034
+# shellcheck disable=SC2016,SC2034,SC2088
 function _test_compile_pattern() {
 	local actual expected
 
@@ -96,6 +96,10 @@ function _test_compile_pattern() {
 
 	actual="$(compile_pattern '$(echo hi)/%y')"
 	expected='$(printf "%(\$\(echo\ hi\)/%Y)T" "${epoch}")'
+	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
+
+	actual="$(compile_pattern '~/%y')"
+	expected='$(printf "%(\~/%Y)T" "${epoch}")'
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	local epoch="1527897600" # epoch for 20180602
@@ -234,7 +238,7 @@ function prepare_commands() {
 
 		# see compile_pattern for why the eval is safe
 		destination_path="$(eval echo "${compiled_pattern}")"
-		echo "mkdir ${verbose_flag}-p '${destination_path}'; mv ${verbose_flag}'${file}' '${destination_path}/${file##*/}'"
+		echo "mkdir ${verbose_flag}-p \"${destination_path}\"; mv ${verbose_flag}'${file}' \"${destination_path}/\"'${file##*/}'"
 	done
 
 	return 0
@@ -246,19 +250,24 @@ function _test_prepare_commands() {
 	pattern="$(compile_pattern "%yQ%q")"
 
 	actual="$(printf '20180602 - Letter.pdf\x00' | prepare_commands "${pattern}")"
-	expected="mkdir -p '2018Q2'; mv '20180602 - Letter.pdf' '2018Q2/20180602 - Letter.pdf'"
+	expected="mkdir -p \"2018Q2\"; mv '20180602 - Letter.pdf' \"2018Q2/\"'20180602 - Letter.pdf'"
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	actual="$(printf '/some/other/dir/20180602 - Letter.pdf\x00' | prepare_commands "/path/to/archive/${pattern}")"
-	expected="mkdir -p '/path/to/archive/2018Q2'; mv '/some/other/dir/20180602 - Letter.pdf' '/path/to/archive/2018Q2/20180602 - Letter.pdf'"
+	expected="mkdir -p \"/path/to/archive/2018Q2\"; mv '/some/other/dir/20180602 - Letter.pdf' \"/path/to/archive/2018Q2/\"'20180602 - Letter.pdf'"
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	actual="$(printf "20180602\\x0020180706\\x00" | prepare_commands "${pattern}")"
-	expected="mkdir -p '2018Q2'; mv '20180602' '2018Q2/20180602'"$'\n'"mkdir -p '2018Q3'; mv '20180706' '2018Q3/20180706'"
+	expected="mkdir -p \"2018Q2\"; mv '20180602' \"2018Q2/\"'20180602'"$'\n'"mkdir -p \"2018Q3\"; mv '20180706' \"2018Q3/\"'20180706'"
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	actual="$(printf "notadatedfile\\x0020180706\\x00" | prepare_commands "${pattern}")"
-	expected="mkdir -p '2018Q3'; mv '20180706' '2018Q3/20180706'"
+	expected="mkdir -p \"2018Q3\"; mv '20180706' \"2018Q3/\"'20180706'"
+	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
+
+	pattern="$(compile_pattern "%y %m")"
+	actual="$(printf '20180602 - Letter.pdf\x00' | prepare_commands "${pattern}")"
+	expected="mkdir -p \"2018\\ 06\"; mv '20180602 - Letter.pdf' \"2018\\ 06/\"'20180602 - Letter.pdf'"
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 }
 
