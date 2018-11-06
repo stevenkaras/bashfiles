@@ -20,7 +20,7 @@ def main():
 
     # fail fast if the template string isn't a good one
     _ = render_for_data([1, 2, 3.4], template)
-    print(render_for_data([float(line.strip()) for line in sys.stdin.readlines()], template))
+    print(render_for_data([float(line) for line in [line.strip() for line in sys.stdin.readlines() if line.strip()]], template))
 
 if __name__ == '__main__':
     sys.exit(main() or 0)
