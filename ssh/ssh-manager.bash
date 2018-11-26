@@ -38,7 +38,7 @@ function distribute() {
 		local do_with="xargs -I {}"
 		;;
 	*)
-		local do_with="parallel -j0"
+		local do_with="parallel --no-notice -j0"
 		;;
 	esac
 
@@ -56,18 +56,23 @@ function push_all() {
 }
 
 function compile_file() {
+	local source_file="$1"
+	[[ ! -f "$source_file" ]] && return 1
+
 	local TMPFILE
 	TMPFILE="$(mktemp)"
-	local source_file="$1"
 	pushd "$(dirname "$source_file")" >/dev/null 2>&1
 	m4 <"$(basename "$source_file")" >"$TMPFILE"
 	popd >/dev/null 2>&1
 	echo "$TMPFILE"
+	return 0
 }
 
 function push_config() {
 	local compiled_config
 	compiled_config="$(compile_file "$PWD/config/$1")"
+	[[ $? -ne 0 ]] && return $?
+
 	if [[ "${1##*@}" == "localhost" && "${1%@*}" == "$USER" ]]; then
 		cp "$compiled_config" "$HOME/.ssh/config"
 	else
@@ -79,6 +84,8 @@ function push_config() {
 function push_authorized_keys() {
 	local compiled_authorized_keys
 	compiled_authorized_keys="$(compile_file "$PWD/authorized_keys/$1")"
+	[[ $? -ne 0 ]] && return $?
+
 	if [[ "${1##*@}" == "localhost" && "${1%@*}" == "$USER" ]]; then
 		cp "$compiled_authorized_keys" "$HOME/.ssh/authorized_keys"
 	else
