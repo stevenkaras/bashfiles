@@ -31,6 +31,7 @@ function setup_ca() {
 function _save_key_from_stdin() {
 	local tmpdir
 	tmpdir="$(mktemp -d)"
+	# shellcheck disable=SC2181
 	if [[ $? != 0 ]]; then
 		>&2 echo "Failed to create temporary directory for stdin input"
 	fi
@@ -39,7 +40,8 @@ function _save_key_from_stdin() {
 }
 
 function sign_key() {
-	local cert_id="$(cat "$SSHCA_ROOT/next_cert_id")"
+	local cert_id
+	cert_id="$(cat "$SSHCA_ROOT/next_cert_id")"
 	local key_to_sign="$1"
 	local saved_key_from_stdin=""
 	shift
@@ -59,10 +61,14 @@ function sign_key() {
 			return 1
 		fi
 	fi
-	local key_identity="$(ssh-keygen -l -f "$key_to_sign")"
-	# local key_comment="$(echo "$key_identity" | cut -d' ' -f4-)"
-	local cert_path="${key_to_sign/%.pub/-cert.pub}"
-	local cert_name="$(basename "$cert_path")"
+	local key_identity
+	key_identity="$(ssh-keygen -l -f "$key_to_sign")"
+	# local key_comment
+	# key_comment="$(echo "$key_identity" | cut -d' ' -f4-)"
+	local cert_path
+	cert_path="${key_to_sign/%.pub/-cert.pub}"
+	local cert_name
+	cert_name="$(basename "$cert_path")"
 	ssh-keygen -s "$SSHCA_ROOT/private/ca_key" -I "$cert_id-$USER_EMAIL" -z "$cert_id" "$@" "$key_to_sign" || return $?
 	echo $((cert_id + 1)) > "$SSHCA_ROOT/next_cert_id"
 	echo "$(date -u +%FT%T%z):sign:$cert_id: $key_identity" >> "$SSHCA_ROOT/audit.log"
@@ -88,7 +94,8 @@ function sign_host_key() {
 		else
 			server="${server%:*}"
 		fi
-		local server_keys="$(ssh-keyscan -p "$port" "$server" 2>/dev/null)"
+		local server_keys
+		server_keys="$(ssh-keyscan -p "$port" "$server" 2>/dev/null)"
 		if [[ -z "$server_keys" ]]; then
 			>&2 echo "$key_to_sign is not a public key file, and ssh-keyscan failed"
 			return 1
@@ -96,8 +103,10 @@ function sign_host_key() {
 		local server_key
 		while IFS= read -r server_key; do
 			if [[ -n "$server_key" ]]; then
-				local key_type="$(cut -d' ' -f 2 <<<"$server_key")"
-				local actual_key="$(cut -d' ' -f2- <<<"$server_key")"
+				local key_type
+				key_type="$(cut -d' ' -f 2 <<<"$server_key")"
+				local actual_key
+				actual_key="$(cut -d' ' -f2- <<<"$server_key")"
 				local key_file="$server.$key_type.pub"
 				local cert_file="${key_file/%.pub/-cert.pub}"
 				echo "$actual_key" > "$key_file"
@@ -116,7 +125,8 @@ function sign_host_key() {
 }
 
 function revoke() {
-	local krl_id="$(cat "$SSHCA_ROOT/next_krl_id")"
+	local krl_id
+	krl_id="$(cat "$SSHCA_ROOT/next_krl_id")"
 	# first, build the KRL actions
 	for arg in "$@"; do
 		if [[ -f "$arg" ]]; then
@@ -163,7 +173,8 @@ function _authorized_key_ca_stanza() {
 	if [[ -n "$principals" ]]; then
 		principals=" principals=\"$principals\""
 	fi
-	local ca_pub="$(cat "$SSHCA_ROOT/ca.pub")"
+	local ca_pub
+	ca_pub="$(cat "$SSHCA_ROOT/ca.pub")"
 	echo "cert-authority$principals $ca_pub"
 }
 
@@ -172,7 +183,8 @@ function _knownhosts_ca_stanza() {
 	if [[ -z "$hosts" ]]; then
 		hosts="*"
 	fi
-	local ca_pub="$(cat "$SSHCA_ROOT/ca.pub")"
+	local ca_pub
+	ca_pub="$(cat "$SSHCA_ROOT/ca.pub")"
 	echo "@cert-authority $hosts $ca_pub"
 }
 
@@ -198,7 +210,8 @@ function trustconfig() {
 }
 
 function show_usage() {
-	local prog="$(basename "$0")"
+	local prog
+	prog="$(basename "$0")"
 	cat <<-HELPMESSAGE
 		  $prog setup                                         # perform the initial setup to start acting as a SSH CA
 		  $prog install [USER@]SERVER[:PORT] [PRINCIPALS...]  # install the CA certificate on the given server (limited to certs with the given principals)
@@ -276,4 +289,6 @@ function main() {
 	esac
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+	main "$@"
+fi
