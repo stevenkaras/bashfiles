@@ -27,6 +27,14 @@ function rename_function() {
 # expand aliases after sudo
 alias sudo='sudo '
 
+# useful alias function for logging in as someone else using sudo.
+# Especially useful for executing programs in the context of a service user (e.g. www-data)
+function loginas() {
+    local user="$1"
+    shift
+    sudo -i -H -u "$user" "$@"
+}
+
 function ui_process() {
     if [ $# -eq 0 ]; then
         echo "USAGE: ui_process COMMAND [ARGS...]"
