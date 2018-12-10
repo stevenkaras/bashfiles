@@ -16,6 +16,13 @@ alias l='ls -CF'
 ## shell commands ##
 ####################
 
+# Taken from https://stackoverflow.com/a/18839557
+function rename_function() {
+  test -n "$(declare -f "$1")" || return 
+  eval "${_/$1/$2}"
+  unset -f "$1"
+}
+
 # https://askubuntu.com/questions/22037/aliases-not-available-when-using-sudo/22043#22043
 # expand aliases after sudo
 alias sudo='sudo '
