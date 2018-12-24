@@ -78,6 +78,10 @@ function compile_pattern() {
 	pattern="${pattern//%q/'$(((10#$(printf "%(%m)T" "${epoch}") - 1) / 3 + 1))'}"
 	pattern="${pattern//%h/'$(((10#$(printf "%(%m)T" "${epoch}") - 1) / 6 + 1))'}"
 
+	# unquote spaces and tildes because we quote it anyways
+	pattern="${pattern//\\\~/\~}"
+	pattern="${pattern//\\ / }"
+
 	echo '$(printf "'"%(${pattern})T"'" "${epoch}")'
 }
 
@@ -91,25 +95,29 @@ function _test_compile_pattern() {
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	actual="$(compile_pattern "%y/%m - %B")"
-	expected='$(printf "%(%Y/%m\ -\ %B)T" "${epoch}")'
+	expected='$(printf "%(%Y/%m - %B)T" "${epoch}")'
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	actual="$(compile_pattern '$(echo hi)/%y')"
-	expected='$(printf "%(\$\(echo\ hi\)/%Y)T" "${epoch}")'
+	expected='$(printf "%(\$\(echo hi\)/%Y)T" "${epoch}")'
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	actual="$(compile_pattern '~/%y')"
-	expected='$(printf "%(\~/%Y)T" "${epoch}")'
+	expected='$(printf "%(~/%Y)T" "${epoch}")'
+	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
+
+	actual="$(compile_pattern '%y %m')"
+	expected='$(printf "%(%Y %m)T" "${epoch}")'
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	local epoch="1527897600" # epoch for 20180602
 	actual="$(eval echo "$(compile_pattern "%y %m %d")")"
-	expected='2018\ 06\ 02'
+	expected='2018 06 02'
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 
 	local epoch="1527897600" # epoch for 20180602
 	actual="$(eval echo "$(compile_pattern "%b %y")")"
-	expected='Jun\ 2018'
+	expected='Jun 2018'
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 }
 
@@ -267,7 +275,7 @@ function _test_prepare_commands() {
 
 	pattern="$(compile_pattern "%y %m")"
 	actual="$(printf '20180602 - Letter.pdf\x00' | prepare_commands "${pattern}")"
-	expected="mkdir -p \"2018\\ 06\"; mv '20180602 - Letter.pdf' \"2018\\ 06/\"'20180602 - Letter.pdf'"
+	expected="mkdir -p \"2018 06\"; mv '20180602 - Letter.pdf' \"2018 06/\"'20180602 - Letter.pdf'"
 	[[ "${actual}" == "${expected}" ]] || >&2 echo "FAIL $0:${LINENO}: expected=${expected} actual=${actual}"
 }
 
