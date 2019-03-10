@@ -72,6 +72,7 @@ function push_config() {
 	local compiled_config
 	compiled_config="$(compile_file "$PWD/config/$1")"
 	[[ $? -ne 0 ]] && return $?
+	# echo "about to push config to $1"
 
 	if [[ "${1##*@}" == "localhost" && "${1%@*}" == "$USER" ]]; then
 		cp "$compiled_config" "$HOME/.ssh/config"
@@ -81,15 +82,57 @@ function push_config() {
 	rm "$compiled_config"
 }
 
+function _check_authorization() {
+	local authorized_keys_file="$1"
+	local target="$2"
+
+	local identity_file
+	identity_file="$(ssh -G "$target" | grep -o -P -e '(?<=^identityfile ).*$')"
+	# ssh will try to offer up all identity files in ~/.ssh, so check those in addition to the configured one
+	for candidate_identity in "${identity_file}" ~/.ssh/*.pub; do
+		if [[ "$candidate_identity" = *.pub ]]; then
+			candidate_identity="${candidate_identity%.pub}"
+		fi
+		if [[ -f "$candidate_identity.pub" ]]; then
+			# echo "checking validity of $candidate_identity.pub"
+			local public_key
+			public_key="$(cut -d' ' -f2 "$candidate_identity.pub")"
+			# echo "searching for $public_key"
+			# grep -v -P -e '^\s*#' "$authorized_keys_file" | grep -o -P -e 'ssh-\S+ \S+'
+			grep -v -P -e '^\s*#' "$authorized_keys_file" | grep -o -P -e 'ssh-\S+ \S+' | grep -F -e "$public_key" -q && return 0
+		fi
+		if [[ -f "$candidate_identity-cert.pub" ]]; then
+			# due to a limitation in ssh-keygen, we can only check the fingerprint, not the full key
+			# echo "checking validity of $candidate_identity-cert.pub"
+			local ca_fingerprint
+			ca_fingerprint="$(ssh-keygen -L -f "$candidate_identity-cert.pub" | grep -o -e 'Signing CA: .*$' | cut -d' ' -f4-)"
+			# echo "searching for $ca_fingerprint"
+			# grep -v -P -e '^\s*#' "$authorized_keys_file" | grep -o -P -e 'ssh-\S+ \S+' | xargs -I % bash -c 'ssh-keygen -l -f <(echo "%")'
+			grep -v -P -e '^\s*#' "$authorized_keys_file" | grep -o -P -e 'ssh-\S+ \S+' | xargs -I % bash -c 'ssh-keygen -l -f <(echo "%")' 2>/dev/null | grep -F -e "$ca_fingerprint" -q && return 0
+		fi
+	done
+
+	return 1
+}
+
 function push_authorized_keys() {
 	local compiled_authorized_keys
 	compiled_authorized_keys="$(compile_file "$PWD/authorized_keys/$1")"
 	[[ $? -ne 0 ]] && return $?
+	# echo "about to push authorized_keys to $1"
 
 	if [[ "${1##*@}" == "localhost" && "${1%@*}" == "$USER" ]]; then
 		cp "$compiled_authorized_keys" "$HOME/.ssh/authorized_keys"
 	else
-		scp "$compiled_authorized_keys" "$1:.ssh/authorized_keys"
+		# VALIDATION: ensure we don't lose access
+		if ! _check_authorization "$compiled_authorized_keys" "$1"; then
+			echo "WARNING! Refusing to push authorized_keys that would not allow future access to $1"
+			return 2
+		fi
+
+		expected_size="$(stat -c %s "$compiled_authorized_keys")"
+		# shellcheck disable=SC2002
+		cat "$compiled_authorized_keys" | ssh "$1" bash -c 'cat > ~/.ssh/temp_authorized_keys && [[ -f .ssh/temp_authorized_keys ]] && (( $(stat -c %s ~/.ssh/temp_authorized_keys) == '"$expected_size"' )) && mv ~/.ssh/temp_authorized_keys ~/.ssh/authorized_keys'
 	fi
 	rm "$compiled_authorized_keys"
 }
