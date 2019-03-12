@@ -36,7 +36,7 @@ Strictly speaking, there's a lot more than just bash here, but the rest is share
 Either git clone and run `install_bashfiles.bash`, or:
 
 ```
-curl https://stevenkaras.github.io/bashfiles | bash
+curl https://karas.io/bashfiles | bash
 ```
 
 which does the exact same.
