@@ -19,6 +19,7 @@ function do_ipython_install() {
 	ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 	local IPYTHON_PROFILE_DIR
 	IPYTHON_PROFILE_DIR="$(ipython locate profile)"
+	# shellcheck disable=SC2181
 	if [[ $? != 0 ]]; then
 		return
 	fi
@@ -45,7 +46,7 @@ function remove_broken_symlinks() {
 
 function do_install() {
 	# if we're being piped into bash, then clone
-	if [[ ! -t 0 && "$0" == "bash" && -z "$BASH_SOURCE" ]]; then
+	if [[ ! -t 0 && "$0" == "bash" && -z "${BASH_SOURCE[0]}" ]]; then
 		if [[ -e "$HOME/bashfiles" ]]; then
 			echo "$HOME/bashfiles already exists. Perhaps you meant to run $HOME/bashfiles/install_bashfiles.bash?"
 			return 1
@@ -71,7 +72,7 @@ function do_install() {
 	local platform
 	platform=$(_platform)
 	# inject the bashfiles
-	if ! grep -E "$HOME/.bashrc" -e "(\.|source)\s+('|\")?($HOME|\\\$HOME)/.bashlib" >/dev/null; then
+	if ! grep -E "$HOME/.bashrc" -e "(\\.|source)\\s+('|\")?($HOME|\\\$HOME)/.bashlib" >/dev/null; then
 		cat <<-BASH >> "$HOME/.bashrc"
 			if [[ -f "\$HOME/.bashrc_$platform" ]]; then
 			    . "\$HOME/.bashrc_$platform"
@@ -119,6 +120,7 @@ function do_install() {
 	# git: To be removed no earlier than 20190601
 	mkdir -p "$XDG_CONFIG_HOME/git"
 	[[ -e "$HOME/.gitconfig" ]] && mv "$HOME/.gitconfig" "$XDG_CONFIG_HOME/git/config"
+	# shellcheck disable=SC2088
 	[[ ! -e "$HOME/.gitignore_global" && "$(git config --global core.excludesfile)" == "~/.gitignore_global" ]] && git config --global --unset core.excludesfile
 
 	# symlink XDG configs
