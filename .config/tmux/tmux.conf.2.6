@@ -1,0 +1,32 @@
+set-window-option -g xterm-keys on
+# switch windows the same way as ubuntu's terminal
+bind-key -n C-PPage previous-window
+bind-key -n C-NPage next-window
+bind-key -n C-T new-window
+bind-key C-i rotate-window -D
+# inherit the display ENV (otherwise sublime text, etc don't work)
+set-option -ga update-environment ' DISPLAY'
+
+# Mouse-oriented settings
+set-option -g mouse on
+
+# set window title
+set-option -g set-titles on
+set-option -g set-titles-string '[#S:#I #H]'
+# number windows from 1 (easier to switch on keyboard)
+set-option -g base-index 1
+set-window-option -g pane-base-index 1
+
+# easy reloading of config
+bind r source-file ~/.tmux.conf \; display "Reloaded Configuration"
+
+# List of plugins
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+# TODO: see if I need this
+# set -g @plugin 'nhdaly/tmux-scroll-copy-mode'
+
+run '~/.tmux/plugins/tpm/tpm'
