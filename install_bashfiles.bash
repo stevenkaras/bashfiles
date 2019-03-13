@@ -29,43 +29,6 @@ function do_ipython_install() {
 	done
 }
 
-function do_tmux_install() {
-	# determine the folder this script is in
-	local ROOTDIR
-	ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-	# discover the tmux version
-	local tmux_version_string
-	tmux_version_string="$(tmux -V)"
-	local tmux_version_config
-	case "$tmux_version_string" in
-		"tmux 1.8")
-			# 1.8 is the version packaged for Ubuntu 14.04
-			tmux_version_config="$ROOTDIR/.config/tmux/tmux.conf.1.8"
-			;;
-		"tmux 2.1")
-			# 2.1 is the version packaged for Ubuntu 16.04
-			tmux_version_config="$ROOTDIR/.config/tmux/tmux.conf.2.1"
-			;;
-		"tmux 2.6")
-			# 2.6 is the version packaged for Ubuntu 18.04
-			tmux_version_config="$ROOTDIR/.config/tmux/tmux.conf.2.6"
-			;;
-		*)
-			tmux_version_config="$ROOTDIR/.config/tmux/tmux.conf.modern"
-			;;
-	esac
-
-	# we may want to overwrite the symlink if it points to one of our files, but the version of tmux has changed
-	local tmux_config="$HOME/.tmux.conf"
-	if [[ -h "$tmux_config" ]]; then
-		local symlink_target
-		symlink_target="$(readlink -n "$file")"
-		[[ "$symlink_target" = "$ROOTDIR"/* ]] && rm "$tmux_config"
-	fi
-	ln -s -n "$tmux_version_config" "$tmux_config" 2>/dev/null
-}
-
 function remove_broken_symlinks() {
 	local ROOTDIR
 	ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -142,7 +105,7 @@ function do_install() {
 	done
 
 	# other files to symlink
-	for otherfile in .agignore .tmux_profile .vim .irbrc .psqlrc .lessfilter .inputrc; do
+	for otherfile in .agignore .tmux.conf .tmux_profile .vim .irbrc .psqlrc .lessfilter .inputrc; do
 		ln -s -n "$ROOTDIR/$otherfile" "$HOME/$otherfile" 2>/dev/null
 	done
 
@@ -171,11 +134,6 @@ function do_install() {
 	ln -s -n "$HOME/.bash_features" "$ROOTDIR/.bash_features" 2>/dev/null # convenience symlink
 	[[ ! -e "$XDG_CONFIG_HOME/git/config" ]] && cp "$ROOTDIR/templates/.config/git/config" "$XDG_CONFIG_HOME/git/config"
 	ln -s -n "$XDG_CONFIG_HOME/git/config" "$ROOTDIR/.config/git/config" 2>/dev/null # convenience symlink
-
-	# link the tmux configuration
-	if type -t tmux >/dev/null; then
-		do_tmux_install
-	fi
 
 	# symlink the local profile files into the repo for convenience
 	[[ -f "$HOME/.profile" ]] && ln -s -n "$HOME/.profile" "$ROOTDIR/.profile" 2>/dev/null
