@@ -6,3 +6,8 @@ function notify() {
 
 alias lstat='stat -L'
 alias trim_trailing_spaces='sed -i "" -E -e '"'"'s/[[:space:]]*$//'"'"''
+
+if [[ -n "$TERMINUS_SUBLIME" ]]; then
+    bind '"\e[1;3C": forward-word'
+    bind '"\e[1;3D": backward-word'
+fi
