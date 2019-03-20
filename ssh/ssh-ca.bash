@@ -161,6 +161,7 @@ function trust_ca() {
 			;;
 		*)
 			>&2 echo "Setting CA as authorized for $username@$server:$port"
+			# shellcheck disable=SC2029
 			ssh -p $port "$username@$server" "tee -a \$HOME/.ssh/authorized_keys <<<\"$(_authorized_key_ca_stanza "$@")\" >/dev/null"
 			;;
 	esac
