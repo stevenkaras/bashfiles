@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""
+Groups the input by a given column, printing the specified aggregations.
+
+Groups are defined as consecutive lines of input that have the same value in the group column.
+This means it works best with input that is already sorted.
+
+EXAMPLES:
+    python3 -c '[print(i, i**2, i % 2) for i in range(10)]' | sort -k 3 | tr ' ' '\t' | groupby -g3 --min 2
+    python3 -c '[print(i, i**2, i % 2) for i in range(10)]' | sort -k 3 | tr ' ' '\t' | groupby -g3 --max 2
+    python3 -c '[print(i, i**2, i % 2) for i in range(10)]' | sort -k 3 | tr ' ' '\t' | groupby -g3 --join 2
+    python3 -c '[print(i, i**2, i % 2) for i in range(10)]' | sort -k 3 | tr ' ' '\t' | groupby -g3 --count
+"""
+
+# Example:
+
+import sys
+import argparse
+
+from signal import signal, SIGPIPE, SIG_DFL
+
+
+def getopt():
+    parser = argparse.ArgumentParser(usage='%(prog)s -g COLUMN [OPTIONS]')
+    parser.add_argument('-g', '--group', type=int, metavar='COLUMN', help='the field number to group by')
+    parser.add_argument('-d', '--delimiter', default='\t', metavar='DELIM', help='use DELIM instead of TAB as a field separator')
+    parser.add_argument('--stdin-tty', action='store_true', help='allow stdin to be a tty')
+
+    output_options = parser.add_argument_group()
+    output_options.add_argument('--min', type=int, action='append', default=[], metavar='COLUMN', help='output the lexicographical minimum value of COLUMN')
+    output_options.add_argument('--max', type=int, action='append', default=[], metavar='COLUMN', help='output the lexicographical maximum value of COLUMN')
+    output_options.add_argument('--join', type=int, action='append', default=[], metavar='COLUMN', help='join the values of this COLUMN')
+    output_options.add_argument('--first', type=int, action='append', default=[], metavar='COLUMN', help='output the first value of this COLUMN')
+    output_options.add_argument('--last', type=int, action='append', default=[], metavar='COLUMN', help='output the last value of this COLUMN')
+    output_options.add_argument('--count', action='store_true', help='output the number of records in the group')
+
+    return parser.parse_args()
+
+
+class BaseAggregation:
+    def __init__(self, column=None):
+        self.column = column
+
+    def new_group(self):
+        pass
+
+    def aggregate(self, record):
+        return self._aggregate(record[column_to_offset(self.column)])
+
+    def _aggregate(self, field):
+        raise NotImplementedError
+
+    def output(self):
+        raise NotImplementedError
+
+
+class Aggregation(BaseAggregation):
+    def __init__(self, column=None):
+        self.column = column
+        self.state = None
+
+    def new_group(self):
+        self.state = None
+
+    def output(self):
+        return self.state
+
+
+class AggregateMax(Aggregation):
+    def _aggregate(self, field):
+        if self.state is None:
+            self.state = field
+        if self.state < field:
+            self.state = field
+
+
+class AggregateMin(Aggregation):
+    def _aggregate(self, field):
+        if self.state is None:
+            self.state = field
+        if self.state > field:
+            self.state = field
+
+
+class AggregateJoin(Aggregation):
+    def new_group(self):
+        self.state = []
+
+    def _aggregate(self, field):
+        self.state.append(field)
+
+    def output(self):
+        return ','.join(self.state)
+
+
+class AggregateFirst(Aggregation):
+    def _aggregate(self, field):
+        if self.state is None:
+            self.state = field
+
+
+class AggregateLast(Aggregation):
+    def _aggregate(self, field):
+        self.state = field
+
+
+class AggregateCount(Aggregation):
+    def new_group(self):
+        self.state = 0
+
+    def aggregate(self, record):
+        self.state += 1
+
+    def output(self):
+        return str(self.state)
+
+
+def column_to_offset(column):
+    if column > 0:
+        return column - 1
+    else:
+        return column
+
+
+def main():
+    options = getopt()
+
+    if not options.stdin_tty and sys.stdin.isatty():
+        print('STDIN is a tty. You probably want to pipe something. Use --stdin-tty to override this error', file=sys.stderr)
+        return
+
+    # die on pipe errors
+    signal(SIGPIPE, SIG_DFL)
+
+    aggregations = []
+    for column in options.max:
+        aggregations.append(AggregateMax(column))
+    for column in options.min:
+        aggregations.append(AggregateMin(column))
+    for column in options.join:
+        aggregations.append(AggregateJoin(column))
+    for column in options.first:
+        aggregations.append(AggregateFirst(column))
+    for column in options.last:
+        aggregations.append(AggregateLast(column))
+    if options.count:
+        aggregations.append(AggregateCount())
+
+    current_group = None
+    for aggregation in aggregations:
+        aggregation.new_group()
+
+    for line in sys.stdin:
+        # chop off the line terminator
+        line = line[:-1]
+        fields = line.split(options.delimiter)
+        group_field = fields[column_to_offset(options.group)]
+        if current_group is None:
+            current_group = group_field
+
+        if current_group != group_field:
+            print(options.delimiter.join([current_group] + [aggregation.output() for aggregation in aggregations]))
+            current_group = group_field
+            for aggregation in aggregations:
+                aggregation.new_group()
+
+        for aggregation in aggregations:
+            aggregation.aggregate(fields)
+
+    print(options.delimiter.join([current_group] + [aggregation.output() for aggregation in aggregations]))
+
+
+if __name__ == '__main__':
+    main()
