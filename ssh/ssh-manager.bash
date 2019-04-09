@@ -71,6 +71,7 @@ function compile_file() {
 function push_config() {
 	local compiled_config
 	compiled_config="$(compile_file "$PWD/config/$1")"
+	# shellcheck disable=SC2181
 	[[ $? -ne 0 ]] && return $?
 	# echo "about to push config to $1"
 
@@ -118,6 +119,7 @@ function _check_authorization() {
 function push_authorized_keys() {
 	local compiled_authorized_keys
 	compiled_authorized_keys="$(compile_file "$PWD/authorized_keys/$1")"
+	# shellcheck disable=SC2181
 	[[ $? -ne 0 ]] && return $?
 	# echo "about to push authorized_keys to $1"
 
@@ -132,7 +134,7 @@ function push_authorized_keys() {
 
 		expected_size="$(stat -c %s "$compiled_authorized_keys")"
 		# shellcheck disable=SC2002
-		cat "$compiled_authorized_keys" | ssh "$1" bash -c 'cat > ~/.ssh/temp_authorized_keys && [[ -f .ssh/temp_authorized_keys ]] && (( $(stat -c %s ~/.ssh/temp_authorized_keys) == '"$expected_size"' )) && mv ~/.ssh/temp_authorized_keys ~/.ssh/authorized_keys'
+		cat "$compiled_authorized_keys" | ssh "$1" bash -c 'cat > ~/.ssh/temp_authorized_keys && [[ -f .ssh/temp_authorized_keys ]] && (( $(stat -c %s ~/.ssh/temp_authorized_keys) == '"$expected_size"' )) && chmod 0600 ~/.ssh/temp_authorized_keys && mv ~/.ssh/temp_authorized_keys ~/.ssh/authorized_keys'
 	fi
 	rm "$compiled_authorized_keys"
 }
