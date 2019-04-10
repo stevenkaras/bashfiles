@@ -88,7 +88,7 @@ function _check_authorization() {
 	local target="$2"
 
 	local identity_file
-	identity_file="$(ssh -G "$target" | grep -o -P -e '(?<=^identityfile ).*$')"
+	identity_file="$(ssh -G "$target" -T | grep -o -P -e '(?<=^identityfile ).*$')"
 	# ssh will try to offer up all identity files in ~/.ssh, so check those in addition to the configured one
 	for candidate_identity in "${identity_file}" ~/.ssh/*.pub; do
 		if [[ "$candidate_identity" = *.pub ]]; then
