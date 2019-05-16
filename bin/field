@@ -4,18 +4,21 @@ import re
 import sys
 import argparse
 
+
 def match(args):
     for line in sys.stdin:
         matches = re.findall(args.pattern, line)
         if matches:
             print(args.delimiter.join(matches))
 
+
 def field(args):
     for line in sys.stdin:
         tokens = line.strip().split(args.delimiter)
-        field = tokens[args.field:args.field+1]
+        field = tokens[args.field:args.field + 1]
         if field:
             print(field)
+
 
 def before(args):
     for line in sys.stdin:
@@ -27,6 +30,7 @@ def before(args):
                     print(previous_token)
                 break
             previous_token = token
+
 
 def after(args):
     for line in sys.stdin:
@@ -40,28 +44,41 @@ def after(args):
                 print(token)
                 break
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Extract fields from stdin', usage='COMMAND | %(prog)s MODE [OPTIONS]')
     subparsers = parser.add_subparsers(help='the mode of operation')
 
     after_parser = subparsers.add_parser('after', help='extract the field after a token')
     after_parser.add_argument('token', help='extract the field immediately following this token')
-    after_parser.add_argument('-d', '--delimiter', dest='delimiter', default=' ', help='delimiter to use between tokens')
+    after_parser.add_argument(
+        '-d', '--delimiter', dest='delimiter', default=' ',
+        help='delimiter to use between tokens',
+    )
     after_parser.set_defaults(func=after)
 
     before_parser = subparsers.add_parser('before', help='extract the field before a token')
     before_parser.add_argument('token', help='extract the field immediately preceding this token')
-    before_parser.add_argument('-d', '--delimiter', dest='delimiter', default=' ', help='delimiter to use between tokens')
+    before_parser.add_argument(
+        '-d', '--delimiter', dest='delimiter', default=' ',
+        help='delimiter to use between tokens',
+    )
     before_parser.set_defaults(func=before)
 
     field_parser = subparsers.add_parser('field', help='extract the field by number')
     field_parser.add_argument('field', help='the field to extract')
-    field_parser.add_argument('-d', '--delimiter', dest='delimiter', default=' ', help='delimiter to use between fields')
+    field_parser.add_argument(
+        '-d', '--delimiter', dest='delimiter', default=' ',
+        help='delimiter to use between fields',
+    )
     field_parser.set_defaults(func=field)
 
     match_parser = subparsers.add_parser('match', help='extract fields that match the given pattern')
     match_parser.add_argument('pattern', help='the pattern to match against')
-    match_parser.add_argument('-d', '--delimiter', dest='delimiter', default=' ', help='delimiter to use between fields')
+    match_parser.add_argument(
+        '-d', '--delimiter', dest='delimiter', default=' ',
+        help='delimiter to use between fields',
+    )
     match_parser.set_defaults(func=match)
 
     args = parser.parse_args()
@@ -71,12 +88,14 @@ def parse_args():
 
     return args
 
+
 def main():
     args = parse_args()
     if args is None:
         sys.exit(1)
 
     args.func(args)
+
 
 if __name__ == '__main__':
     main()
