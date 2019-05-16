@@ -78,7 +78,7 @@ function push_config() {
 	if [[ "${1##*@}" == "localhost" && "${1%@*}" == "$USER" ]]; then
 		cp "$compiled_config" "$HOME/.ssh/config"
 	else
-		scp "$compiled_config" "$1:.ssh/config"
+		scp -o ClearAllForwardings=yes "$compiled_config" "$1:.ssh/config"
 	fi
 	rm "$compiled_config"
 }
@@ -134,7 +134,7 @@ function push_authorized_keys() {
 
 		expected_size="$(stat -c %s "$compiled_authorized_keys")"
 		# shellcheck disable=SC2002
-		cat "$compiled_authorized_keys" | ssh "$1" bash -c 'cat > ~/.ssh/temp_authorized_keys && [[ -f .ssh/temp_authorized_keys ]] && (( $(stat -c %s ~/.ssh/temp_authorized_keys) == '"$expected_size"' )) && chmod 0600 ~/.ssh/temp_authorized_keys && mv ~/.ssh/temp_authorized_keys ~/.ssh/authorized_keys'
+		cat "$compiled_authorized_keys" | ssh -o ClearAllForwardings=yes "$1" bash -c 'cat > ~/.ssh/temp_authorized_keys && [[ -f .ssh/temp_authorized_keys ]] && (( $(stat -c %s ~/.ssh/temp_authorized_keys) == '"$expected_size"' )) && chmod 0600 ~/.ssh/temp_authorized_keys && mv ~/.ssh/temp_authorized_keys ~/.ssh/authorized_keys'
 	fi
 	rm "$compiled_authorized_keys"
 }
