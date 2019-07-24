@@ -71,10 +71,10 @@ function explain {
 
 function sshmux() {
     # shellcheck disable=SC2029
-    ssh -t "$@" tmux -L "$USER" new -A -s "$USER"
+    ssh -t "$@" tmux -L "${REMOTE_USER:-$USER}" new -A -s "${REMOTE_USER:-$USER}"
 }
 function moshmux() {
-    mosh "$@" -- tmux -L "$USER" new -A -s "$USER"
+    mosh "$@" -- tmux -L "${REMOTE_USER:-$USER}" new -A -s "${REMOTE_USER:-$USER}"
 }
 alias mux='tmuxinator'
 alias va='$VISUAL ~/.bash_aliases'
