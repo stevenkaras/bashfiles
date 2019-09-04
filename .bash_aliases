@@ -189,6 +189,7 @@ alias bson2json='ruby -rjson -rbson -n -e "puts Hash.from_bson(BSON::ByteBuffer.
 ## Silliness ##
 ###############
 alias fucking='sudo '
+alias please='sudo '
 
 function xkcd() {
     local open_command=""
