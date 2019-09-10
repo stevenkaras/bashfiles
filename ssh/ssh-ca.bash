@@ -157,7 +157,7 @@ function trust_ca() {
 
 	case "$server" in
 		localhost|--local|"")
-			knownhosts_ca_stanza "$@" >> "$HOME/.ssh/known_hosts"
+			_knownhosts_ca_stanza "$@" >> "$HOME/.ssh/known_hosts"
 			;;
 		*)
 			>&2 echo "Setting CA as authorized for $username@$server:$port"
@@ -207,7 +207,7 @@ function find_ca_root() {
 function trustconfig() {
 	_authorized_key_ca_stanza "$1"
 	shift
-	knownhosts_ca_stanza "$1"
+	_knownhosts_ca_stanza "$1"
 }
 
 function show_usage() {
