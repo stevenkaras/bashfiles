@@ -137,6 +137,33 @@ function mstime() {
     printf '\tTime taken: %sms\n' "$elapsedms"
 }
 
+function whichlink() {
+    file="$(type -p "$1")"
+    if [[ -z "$file" ]]; then
+        local commandtype
+        commandtype="$(type -t "$1")"
+        case "$(type -t "$1")" in
+            alias)
+                type "$1"
+                ;;
+            *)
+                echo "$1 is a $commandtype"
+                ;;
+        esac
+        return
+    fi
+    while [[ -L "$file" ]]; do
+        ls -AhlF "$file"
+        nextfile="$(readlink -n "$file")"
+        if [[ "$nextfile" = /* ]]; then
+            file="$nextfile"
+        else
+            file="$(dirname "$file")/$nextfile"
+        fi
+    done
+    ls -AhlF "$file"
+}
+
 ## version control ##
 #####################
 
