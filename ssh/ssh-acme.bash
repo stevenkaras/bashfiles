@@ -43,7 +43,8 @@ function trust() {
 	local authorized_keys_prefix="command=\"env -i \$HOME/bin/ssh-acme autosign $key_path\""
 	# the ssh-acme/ssh-ca scripts require a pty...so we can't set no-pty
 	local authorized_keys_options=',no-agent-forwarding,no-port-forwarding,no-user-rc,no-X11-forwarding'
-	local authorized_keys_stanza="${authorized_keys_prefix}${authorized_keys_options} $(cat "$key_path")"
+	local authorized_keys_stanza
+	authorized_keys_stanza="${authorized_keys_prefix}${authorized_keys_options} $(cat "$key_path")"
 	echo "$authorized_keys_stanza" >> "$HOME/.ssh/authorized_keys"
 	echo "$(date -u +%FT%T%z):acme-trust: $fingerprint" >> "$SSHCA_ROOT/audit.log"
 	echo "Trusted $fingerprint to be automatically issued certificates"
@@ -101,7 +102,8 @@ function revoke() {
 
         # SSH requires the use of a file, and is incapable of working off stdin, so write to a tmpfile
         printf "%s %s %s" "$keytype" "$key" "$comment" > "$tmpfile"
-		local stored_fingerprint="$(ssh-keygen -l -f "$tmpfile" | cut -d' ' -f2)"
+        local stored_fingerprint
+		stored_fingerprint="$(ssh-keygen -l -f "$tmpfile" | cut -d' ' -f2)"
 		if [[ "$stored_fingerprint" != "$fingerprint" ]]; then
 			echo "$line"
 		fi
@@ -137,6 +139,7 @@ function show_usage() {
 	local prog="${0##*/}"
 	cat <<-HELPMESSAGE
 		  $prog trust KEYFILE                 # Trust a key to be issued certificates automatically
+		  $prog trusthost KEYFILE             # Trust a key to be issued host certificates automatically
 		  $prog revoke [KEYFILE|FINGERPRINT]  # Revoke a key, so it cannot be issued any more certificates
 	HELPMESSAGE
 	if [[ "$1" == "-v" || "$1" == "--verbose" ]]; then
