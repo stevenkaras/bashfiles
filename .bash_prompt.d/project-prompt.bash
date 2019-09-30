@@ -42,8 +42,9 @@ function __project_resolve_symlinks() {
 function project_root() {
   local result
 
-  local gitroot="$(git rev-parse --show-toplevel 2>/dev/null)"
-  if [ ! -z "$gitroot" ]; then
+  local gitroot
+  gitroot="$(git rev-parse --show-toplevel 2>/dev/null)"
+  if [[ ! -z "$gitroot" ]]; then
     result="$(__project_resolve_symlinks "$gitroot" "$PWD")"
   # else
     # disabled because I don't use SVN, and it creates a ton of extra process calls
@@ -53,38 +54,20 @@ function project_root() {
     # fi
   fi
 
-  if [ "$result" = "." ]; then
+  if [[ "$result" = "." ]]; then
     result="$PWD"
   fi
 
-  if [ ! -z "$result" ]; then
-    echo $result
-  fi
-}
-
-# determine the relative path within the project
-function project_path() {
-  local project_root=$(project_root)
-  if [ -d "$project_root" ]; then
-    echo ${PWD##$project_root}
-  fi
-}
-
-# determine the project name
-function project_name() {
-  local project_root="$(project_root)"
-  if [ -d "$project_root" ]; then
-    echo $(basename "$project_root")
+  if [[ ! -z "$result" ]]; then
+    echo "$result"
   fi
 }
 
 function project_ps1() {
-  local project_name="$(project_name)"
-  if [ ! -z "$project_name" ]; then
-    local project_path="$(project_path)"
-    echo "[${project_name}]${project_path}"
+  if [[ ! -z "$PROJECT_NAME" ]]; then
+    echo "[${PROJECT_NAME}]${PROJECT_PATH}"
   else
-    if [ "$PWD" = "$HOME" ]; then
+    if [[ "$PWD" == "$HOME" ]]; then
       echo "~"
     else
       echo "$(basename "$PWD")"
@@ -92,12 +75,17 @@ function project_ps1() {
   fi
 }
 
-function project_update_name() {
-  PROJECT_NAME=$(project_name)
-  PROJECT_PATH=$(project_path)
-  PROJECT_ROOT=$(project_root)
+function _project_update_name() {
+  PROJECT_ROOT="$(project_root)"
+  if [[ -d "$PROJECT_ROOT" ]]; then
+    PROJECT_NAME="$(basename "$PROJECT_ROOT")"
+    PROJECT_PATH="${PWD##$PROJECT_ROOT}"
+  else
+    PROJECT_NAME=""
+    PROJECT_PATH=""
+  fi
 }
 
-if [[ ! "$CHDIR_COMMAND" == *"project_update_name"* ]]; then
-  CHDIR_COMMAND="project_update_name${CHDIR_COMMAND:+;$CHDIR_COMMAND}"
+if [[ ! "$CHDIR_COMMAND" == *"_project_update_name"* ]]; then
+  CHDIR_COMMAND="_project_update_name${CHDIR_COMMAND:+;$CHDIR_COMMAND}"
 fi
