@@ -9,7 +9,7 @@ function __transcend_root() {
 
   until [[ "$current" == "$parent" ]]; do
     if [[ -e "$parent/$1" ]]; then
-      echo "$parent"
+      printf "%s" "$parent"
       return 0
     fi
 
@@ -27,7 +27,7 @@ function __project_resolve_symlinks() {
 
   until [[ "$previous" == "$current" ]]; do
     if [[ "$current" -ef "$1" ]]; then
-      echo "$current"
+      printf "%s" "$current"
       return 0
     fi
 
@@ -59,18 +59,18 @@ function project_root() {
   fi
 
   if [[ ! -z "$result" ]]; then
-    echo "$result"
+    printf "%s" "$result"
   fi
 }
 
 function project_ps1() {
   if [[ ! -z "$PROJECT_NAME" ]]; then
-    echo "[${PROJECT_NAME}]${PROJECT_PATH}"
+    printf "%s" "[${PROJECT_NAME}]${PROJECT_PATH}"
   else
     if [[ "$PWD" == "$HOME" ]]; then
-      echo "~"
+      printf "%s" "~"
     else
-      echo "$(basename "$PWD")"
+      printf "%s" "${PWD##*/}"
     fi
   fi
 }
