@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # git-command-hooks -- a wrapper for git that allows hooks
 #
 # Note: adding the --force flag to the command
@@ -5,7 +7,9 @@
 #
 # Version: 0.1.0
 #
-# Works with all Bourne compatible shells.
+# Bash-only variant of git-command-hooks, intended to avoid invoking extra processes.
+# Especially since git is invoked several times in building a prompt,
+# this can cause unnecessary delays when working with a system under extreme load.
 #
 # Based on: https://github.com/rkitover/git-svn-hooks
 # Based on: https://raw.github.com/hkjels/.dotfiles/master/zsh/git-svn.zsh
@@ -14,49 +18,48 @@
 #
 # repo: https://github.com/stevenkaras/bashfiles
 
-git() {
-    _gitdir=$(command git rev-parse --git-dir 2>/dev/null)
+function git() {
+    local _gitdir
+    _gitdir="$(command git rev-parse --git-dir 2>/dev/null)"
 
     # Expand git aliases
-    _param_1=$1
-    export _param_1
+    local _param_1="$1"
+    local _expanded
     _expanded="$( \
-        command git config --get-regexp alias | sed -e 's/^alias\.//' | while read _alias _git_cmd; do \
-            if [ "$_alias" = "$_param_1" ]; then \
-                echo "$_git_cmd"; \
+        command git config --get-regexp alias | sed -e 's/^alias\.//' | while read -r _alias _git_cmd; do \
+            if [[ "$_alias" == "$_param_1" ]]; then \
+                printf "%s" "$_git_cmd"; \
                 break; \
             fi; \
         done \
     )"
-    unset _param_1
 
-    # check for !shell-command aliases
+    local _exit_val
+
     case "$_expanded" in
     \!*)
-        _expanded=$(echo "$_expanded" | sed -e 's/.//')
+        # check for !shell-command aliases
+        _expanded="${_expanded:1}"
         shift
         eval "$_expanded \"\$@\""
         _exit_val=$?
-        unset _gitdir _expanded
         return $_exit_val
         ;;
     *)
-        if [ -n "$_expanded" ]; then
+        # expand aliases
+        if [[ -n "$_expanded" ]]; then
             shift
             eval "git $_expanded \"\$@\""
             _exit_val=$?
-            unset _gitdir _expanded
             return $_exit_val
         fi
         ;;
     esac
-    unset _expanded
 
     # Pre hooks
-    if [ -x "$_gitdir/hooks/pre-command-$1" ]; then
+    if [[ -x "$_gitdir/hooks/pre-command-$1" ]]; then
         if ! "$_gitdir/hooks/pre-command-$1" "${@:2}"; then
             _exit_val=$?
-            unset _gitdir
             return $_exit_val
         fi
     fi
@@ -66,19 +69,17 @@ git() {
     _exit_val=$?
 
     # Post hooks
-    if [ -x "$_gitdir/hooks/post-command-$1" ]; then
+    if [[ -x "$_gitdir/hooks/post-command-$1" ]]; then
         if ! "$_gitdir/hooks/post-command-$1" "${@:2}"; then
             _exit_val=$?
-            unset _gitdir
             return $_exit_val
         fi
     fi
 
-    unset _gitdir
     return $_exit_val
 }
 
-# Copyright (c) 2016, Steven Karas
+# Copyright (c) 2019, Steven Karas
 # Portions copyright (c) 2013, Rafael Kitover
 # All rights reserved.
 #
