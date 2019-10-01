@@ -35,8 +35,16 @@ function _save_key_from_stdin() {
 	if [[ $? != 0 ]]; then
 		>&2 echo "Failed to create temporary directory for stdin input"
 	fi
-	cat > "$tmpdir/id_rsa.pub"
-	echo "$tmpdir/id_rsa.pub"
+	cat > "$tmpdir/ssh_id.pub"
+	echo "$tmpdir/ssh_id.pub"
+}
+
+function _cleanup_key_from_stdin() {
+	local key_to_sign="$1"
+	local cert_path="${key_to_sign/%.pub/-cert.pub}"
+	cat "$cert_path"
+	rm "$cert_path" "$key_to_sign"
+	rmdir "$(dirname "$cert_path")"
 }
 
 function sign_key() {
@@ -65,8 +73,7 @@ function sign_key() {
 	key_identity="$(ssh-keygen -l -f "$key_to_sign")"
 	# local key_comment
 	# key_comment="$(echo "$key_identity" | cut -d' ' -f4-)"
-	local cert_path
-	cert_path="${key_to_sign/%.pub/-cert.pub}"
+	local cert_path="${key_to_sign/%.pub/-cert.pub}"
 	local cert_name
 	cert_name="$(basename "$cert_path")"
 	ssh-keygen -s "$SSHCA_ROOT/private/ca_key" -I "$cert_id-$USER_EMAIL" -z "$cert_id" "$@" "$key_to_sign" || return $?
@@ -74,17 +81,28 @@ function sign_key() {
 	echo "$(date -u +%FT%T%z):sign:$cert_id: $key_identity" >> "$SSHCA_ROOT/audit.log"
 	cp "$cert_path" "$SSHCA_ROOT/certs/${cert_id}-${cert_name}"
 	if [[ -n "$saved_key_from_stdin" ]]; then
-		cat "$cert_path"
-		rm "$cert_path" "$key_to_sign"
-		rmdir "$(dirname "$cert_path")"
+		_cleanup_key_from_stdin "$key_to_sign"
 	fi
+}
+
+function sign_host_keys() {
+	while IFS= read -r line; do
+		$line
+	done < <(:)
+	key_to_sign="$(_save_key_from_stdin)"
+	_sign_host_key "$key_to_sign" "$@"
+	_cleanup_key_from_stdin "$key_to_sign"
 }
 
 function sign_host_key() {
 	local key_to_sign="$1"
 	shift
 	if [[ -f "$key_to_sign" ]]; then
-		sign_key "$key_to_sign" -h "$@"
+		_sign_host_key "$key_to_sign" "$@"
+	elif [[ -z "$key_to_sign" || "$key_to_sign" == "-" ]]; then
+		key_to_sign="$(_save_key_from_stdin)"
+		_sign_host_key "$key_to_sign" "$@"
+		_cleanup_key_from_stdin "$key_to_sign"
 	else
 		# assume it's a server
 	    local server="$key_to_sign"
@@ -94,33 +112,31 @@ function sign_host_key() {
 		else
 			server="${server%:*}"
 		fi
-		local server_keys
-		server_keys="$(ssh-keyscan -p "$port" "$server" 2>/dev/null)"
-		if [[ -z "$server_keys" ]]; then
+		local scan_result
+		scan_result="$(ssh-keyscan -p "$port" "$server" 2>/dev/null | grep -v -e '^#' | head -n 1)"
+	    local scan_key="${scan_result#* }"
+		if [[ -z "$scan_key" ]]; then
 			>&2 echo "$key_to_sign is not a public key file, and ssh-keyscan failed"
 			return 1
 		fi
-		local server_key
-		while IFS= read -r server_key; do
-			if [[ -n "$server_key" ]]; then
-				local key_type
-				key_type="$(cut -d' ' -f 2 <<<"$server_key")"
-				local actual_key
-				actual_key="$(cut -d' ' -f2- <<<"$server_key")"
-				local key_file="$server.$key_type.pub"
-				local cert_file="${key_file/%.pub/-cert.pub}"
-				echo "$actual_key" > "$key_file"
+		key_to_sign="$(echo "$scan_key" | _save_key_from_stdin)"
+		_sign_host_key "$key_to_sign" "$@"
+		_cleanup_key_from_stdin "$key_to_sign"
+	fi
+}
 
-				if sign_key "$key_file" -h "$@"; then
-					>&2 echo "Signed $key_type for $server in $cert_file"
-					>&2 echo "You'll need to add HostCertificate /etc/ssh/$cert_file to your sshd_config"
-				else
-					>&2 echo "failed to sign $key_type from $server"
-					rm "$key_file"
-					return 1
-				fi
-			fi
-		done <<<"$server_keys"
+function _sign_host_key() {
+	local key_to_sign="$1"
+	local cert_path="${key_to_sign/%.pub/-cert.pub}"
+	local cert_file="${cert_path##*/}"
+	shift
+	if sign_key "$key_to_sign" -h "$@"; then
+		>&2 echo "Signed key for $server in $cert_file"
+		>&2 echo "For your sshd to use the certificate, run this on the server:"
+		>&2 echo "printf 'HostCertificate /etc/ssh/$cert_file' | sudo tee -a /etc/ssh/sshd_config >/dev/null"
+	else
+		>&2 echo "failed to sign $key_type from $server"
+		return 1
 	fi
 }
 
@@ -218,6 +234,7 @@ function show_usage() {
 		  $prog install [USER@]SERVER[:PORT] [PRINCIPALS...]  # install the CA certificate on the given server (limited to certs with the given principals)
 		  $prog sign KEY [-n PRINCIPALS] [OPTIONS]            # sign the given KEY
 		  $prog signhost KEY [-n PRINCIPALS] [OPTIONS]        # sign the given host KEY
+		  $prog signhosts [-n PRINCIPLES] [OPTIONS]           # sign host keys from STDIN (one per line)
 		  $prog revoke CERTS...                               # revoke a certificate
 		  $prog trustconfig [PRINCIPALS [HOSTS]]              # print the config stanzas for trusting keys signed by the CA
 		  $prog implode                                       # delete the CA permanently
@@ -253,6 +270,11 @@ function main() {
 		sign)
 			find_ca_root || exit $?
 			sign_key "$@"
+			exit $?
+			;;
+		signhosts)
+			find_ca_root || exit $?
+			sign_host_keys "$@"
 			exit $?
 			;;
 		signhost)
