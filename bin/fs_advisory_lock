@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
+# We use creating a hardlink as the locking primitive here.
+# flock is a great primitive for local processes, but this advisory lock is intended to be used as a distributed lock
+
 function _lock() {
-	while ! _trylock "$@"; do
+	local lockfile="$1"
+	local lease_term="${2:-300}" # 5 minute default lease
+	while ! _trylock "$lockfile" "$lease_term" 0; do
 		sleep 0.1
 	done
 	return 0
@@ -10,25 +15,24 @@ function _lock() {
 function _trylock() {
 	local lockfile="$1"
 	local lease_term="${2:-300}" # 5 minute default lease
+	local show_errors="${3:-1}"
 
-	local now="$(date +%s)"
+	local now
+	now="$(date +%s)"
 	let expiry="$now + $lease_term"
-	printf "%s" "$$\n$expiry" > "$lockfile.$expiry"
+	printf "%s\n%s" "$$" "$expiry" > "$lockfile.$expiry"
 	while ! ln "$lockfile.$expiry" "$lockfile" 2>/dev/null; do
-		if [[ ! -s "$lockfile" ]]; then
-			if ! rm -f "$lockfile"; then
-				return 1
-			fi
+		local current_expiry
+		current_expiry="$(tail -n1 "$lockfile" 2>/dev/null)"
+		if [[ $? != 0 ]]; then
+			# this can happen when someone has manually clobbered the lock state
+			[[ $show_errors -eq 1 ]] && >&2 printf "Lock in partial state. May be safe to bust the lock: %s" "$lockfile"
+			return 1
 		else
-			local current_expiry="$(tail -n 1 "$lockfile")"
 			if [[ "$current_expiry" -lt "$now" ]]; then
+				[[ $show_errors -eq 1 ]] && >&2 printf "Lock lease expired. May be safe to bust the lock: %s" "$lockfile"
 				# The lease has expired, and the lock can be semi-safely busted open
-				# However, I don't have a good solution on how to do this...
-
-				#NOTE: this results in a TOCTTOU bug
-				# if ! rm -f "$lockfile"; then
-				# 	return 1
-				# fi
+				# however, there is no easy way to avoid race conditions here, so I don't provide a solution yet
 				return 1
 			else
 				return 1
@@ -43,9 +47,11 @@ function _renew() {
 	local lockfile="$1"
 	local lease_term="${2:-300}" # 5 minute default lease
 
-	local now="$(date +%s)"
+	local now
+	now="$(date +%s)"
 	let expiry="$now + $lease_term"
-	local current_expiry="$(tail -n 1 "$lockfile")"
+	local current_expiry
+	current_expiry="$(tail -n 1 "$lockfile")"
 	printf "%s" "$$\n$expiry" > "$lockfile.$current_expiry"
 	mv "$lockfile.$current_expiry" "$lockfile.$expiry"
 
@@ -55,13 +61,15 @@ function _renew() {
 function _unlock() {
 	local lockfile="$1"
 
-	local current_expiry="$(tail -n 1 "$lockfile")"
+	local current_expiry
+	current_expiry="$(tail -n 1 "$lockfile")"
 	rm -f "$lockfile.$current_expiry"
 	rm -f "$lockfile"
 }
 
 function show_usage() {
-	local prog="$(basename "$0")"
+	local prog
+	prog="$(basename "$0")"
 	cat <<-HELPMESSAGE
 		  $prog lock [LOCKNAME] [LEASE_TERM]     # acquire the advisory lock, blocking until it's acquired
 		  $prog trylock [LOCKNAME] [LEASE_TERM]  # exits with status 0 if the lock is acquired, otherwise 1
