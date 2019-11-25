@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+SYNC_REMOTE=sync-mirrors
+
+# DOC: how to set up this hook
+# git config sync-mirrors.lock_server SERVER_SSH_NAME
+# git config sync-mirrors.lock_name LOCK_FILENAME
+# DOC: how to add a new primary
+# git remote set-url --add sync-mirrors REMOTE_URL
+# DOC: how to remove an old primary
+# git remote set-url --delete sync-mirrors REMOTE_URL
+
+lock_server="$(git config remote."${SYNC_REMOTE}".lock_server)"
+lock_name="$(git config remote."${SYNC_REMOTE}".lock_name)"
+
+if [[ -z "$lock_server" || -z "$lock_name" ]]; then
+    exit 0
+fi
+
+# attempt to grab the lock
+
+# shellcheck disable=SC2029
+if ! ssh "$lock_server" "bin/fs_advisory_lock trylock \"\${TMPDIR:-/tmp}/$lock_name\".mppush 300 $USER${REMOTE_USER:++$REMOTE_USER}@$HOSTNAME"; then
+    printf "Failed to acquire lock. Check who is holding the lock at %s:\${TMPDIR:-/tmp}/%s.mppush" "$lock_server" "$lock_name"
+    exit 1
+fi
+
+# do the pull
+exit 0

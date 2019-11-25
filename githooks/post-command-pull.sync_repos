@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# see the documentation in the pre-command-pull.sync_repos file
+
+SYNC_REMOTE=sync-mirrors
+lock_server="$(git config remote."${SYNC_REMOTE}".lock_server)"
+lock_name="$(git config remote."${SYNC_REMOTE}".lock_name)"
+
+if [[ -z "$lock_server" || -z "$lock_name" ]]; then
+    exit 0
+fi
+
+# push to all the synced repos
+if ! git push --mirror sync-mirrors; then
+    printf "Failed to push to all synced repos; not releasing lock"
+    printf "Once the failure has been fixed, release the lock with: ssh %s \"bin/fs_advisory_lock unlock \\\"\${TMPDIR:-/tmp}/%s\\\".mppush\"" "$lock_server" "$lock_name"
+    exit 1
+fi
+
+# shellcheck disable=SC2029
+if ! ssh "$lock_server" "bin/fs_advisory_lock unlock \"\${TMPDIR:-/tmp}/$lock_name\".mppush"; then
+    printf "Failed to release lock. Check who is holding the lock at %s:\${TMPDIR:-/tmp}/%s.mppush" "$lock_server" "$lock_name"
+    exit 1
+fi
+
+# we've finished the pull
+exit 0
