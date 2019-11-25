@@ -6,7 +6,8 @@
 function _lock() {
 	local lockfile="$1"
 	local lease_term="${2:-300}" # 5 minute default lease
-	while ! _trylock "$lockfile" "$lease_term" 0; do
+	shift 2
+	while ! _attempt_lock "$lockfile" "$lease_term" 0 "$@"; do
 		sleep 0.1
 	done
 	return 0
@@ -15,12 +16,22 @@ function _lock() {
 function _trylock() {
 	local lockfile="$1"
 	local lease_term="${2:-300}" # 5 minute default lease
-	local show_errors="${3:-1}"
+	shift 2
+	_attempt_lock "$lockfile" "$lease_term" 1 "$@"
+	return $?
+}
+
+function _attempt_lock() {
+	local lockfile="$1"
+	local lease_term="$2"
+	local show_errors="$3"
+	shift 3
 
 	local now
 	now="$(date +%s)"
 	let expiry="$now + $lease_term"
-	printf "%s\n%s" "$$" "$expiry" > "$lockfile.$expiry"
+	printf "%s\n%s\n" "$$" "$expiry" > "$lockfile.$expiry"
+	printf "%s\n" "$@" >> "$lockfile.$expiry"
 	while ! ln "$lockfile.$expiry" "$lockfile" 2>/dev/null; do
 		local current_expiry
 		current_expiry="$(tail -n1 "$lockfile" 2>/dev/null)"
@@ -81,6 +92,7 @@ function show_usage() {
 
 			This script provides a simple locking mechanism for use in external scripts.
 			The default lease term is 5 minutes.
+			Any extra arguments to lock or trylock are saved in the lockfile to ease debugging.
 		VERBOSEHELP
 	fi
 }
