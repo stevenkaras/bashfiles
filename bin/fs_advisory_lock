@@ -46,6 +46,8 @@ function _attempt_lock() {
 				# however, there is no easy way to avoid race conditions here, so I don't provide a solution yet
 				return 1
 			else
+				# clean up our attempt to grab the lock
+				rm "$lockfile.$expiry"
 				return 1
 			fi
 		fi
