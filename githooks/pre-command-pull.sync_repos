@@ -21,7 +21,7 @@ fi
 
 # shellcheck disable=SC2029
 if ! ssh "$lock_server" "bin/fs_advisory_lock trylock \"\${TMPDIR:-/tmp}/$lock_name\".mppush 300 $USER${REMOTE_USER:++$REMOTE_USER}@$HOSTNAME"; then
-    printf "Failed to acquire lock. Check who is holding the lock at %s:\${TMPDIR:-/tmp}/%s.mppush" "$lock_server" "$lock_name"
+    >&2 printf "Failed to acquire lock. Check who is holding the lock at %s:\${TMPDIR:-/tmp}/%s.mppush\n" "$lock_server" "$lock_name"
     exit 1
 fi
 

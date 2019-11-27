@@ -12,14 +12,15 @@ fi
 
 # push to all the synced repos
 if ! git push --mirror sync-mirrors; then
-    printf "Failed to push to all synced repos; not releasing lock"
-    printf "Once the failure has been fixed, release the lock with: ssh %s \"bin/fs_advisory_lock unlock \\\"\${TMPDIR:-/tmp}/%s\\\".mppush\"" "$lock_server" "$lock_name"
+    >&2 printf "Failed to push to all synced repos; not releasing lock\n"
+    >&2 printf "Once the failure has been fixed, release the lock with:\n"
+    >&2 printf "ssh %s \"bin/fs_advisory_lock unlock \\\"\${TMPDIR:-/tmp}/%s\\\".mppush\"\n" "$lock_server" "$lock_name"
     exit 1
 fi
 
 # shellcheck disable=SC2029
 if ! ssh "$lock_server" "bin/fs_advisory_lock unlock \"\${TMPDIR:-/tmp}/$lock_name\".mppush"; then
-    printf "Failed to release lock. Check who is holding the lock at %s:\${TMPDIR:-/tmp}/%s.mppush" "$lock_server" "$lock_name"
+    >&2 printf "Failed to release lock. Check who is holding the lock at %s:\${TMPDIR:-/tmp}/%s.mppush\n" "$lock_server" "$lock_name"
     exit 1
 fi
 
