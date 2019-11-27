@@ -3,15 +3,15 @@
 SYNC_REMOTE=sync-mirrors
 
 # DOC: how to set up this hook
-# git config sync-mirrors.lock_server SERVER_SSH_NAME
-# git config sync-mirrors.lock_name LOCK_FILENAME
+# git config remote.sync-mirrors.lock-server SERVER_SSH_NAME
+# git config remote.sync-mirrors.lock-name LOCK_FILENAME
 # DOC: how to add a new primary
 # git remote set-url --add sync-mirrors REMOTE_URL
 # DOC: how to remove an old primary
 # git remote set-url --delete sync-mirrors REMOTE_URL
 
-lock_server="$(git config remote."${SYNC_REMOTE}".lock_server)"
-lock_name="$(git config remote."${SYNC_REMOTE}".lock_name)"
+lock_server="$(git config remote."${SYNC_REMOTE}".lock-server)"
+lock_name="$(git config remote."${SYNC_REMOTE}".lock-name)"
 
 if [[ -z "$lock_server" || -z "$lock_name" ]]; then
     exit 0

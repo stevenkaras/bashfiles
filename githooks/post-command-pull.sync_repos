@@ -3,8 +3,8 @@
 # see the documentation in the pre-command-pull.sync_repos file
 
 SYNC_REMOTE=sync-mirrors
-lock_server="$(git config remote."${SYNC_REMOTE}".lock_server)"
-lock_name="$(git config remote."${SYNC_REMOTE}".lock_name)"
+lock_server="$(git config remote."${SYNC_REMOTE}".lock-server)"
+lock_name="$(git config remote."${SYNC_REMOTE}".lock-name)"
 
 if [[ -z "$lock_server" || -z "$lock_name" ]]; then
     exit 0
