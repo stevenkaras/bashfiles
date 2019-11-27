@@ -37,11 +37,11 @@ function _attempt_lock() {
 		current_expiry="$(head -n2 "$lockfile" 2>/dev/null | tail -n1)"
 		if [[ $? != 0 ]]; then
 			# this can happen when someone has manually clobbered the lock state
-			[[ $show_errors -eq 1 ]] && >&2 printf "Lock in partial state. May be safe to bust the lock: %s" "$lockfile"
+			[[ $show_errors -eq 1 ]] && >&2 printf "Lock in partial state. May be safe to bust the lock: %s\n" "$lockfile"
 			return 1
 		else
 			if [[ "$current_expiry" -lt "$now" ]]; then
-				[[ $show_errors -eq 1 ]] && >&2 printf "Lock lease expired. May be safe to bust the lock: %s" "$lockfile"
+				[[ $show_errors -eq 1 ]] && >&2 printf "Lock lease expired. May be safe to bust the lock: %s\n" "$lockfile"
 				# The lease has expired, and the lock can be semi-safely busted open
 				# however, there is no easy way to avoid race conditions here, so I don't provide a solution yet
 				return 1
@@ -65,7 +65,7 @@ function _renew() {
 	let expiry="$now + $lease_term"
 	local current_expiry
 	current_expiry="$(head -n2 "$lockfile" 2>/dev/null | tail -n1)"
-	printf "%s" "$$\n$expiry" > "$lockfile.$current_expiry"
+	printf "%s\n%s" "$$" "$expiry" > "$lockfile.$current_expiry"
 	mv "$lockfile.$current_expiry" "$lockfile.$expiry"
 
 	return 0
