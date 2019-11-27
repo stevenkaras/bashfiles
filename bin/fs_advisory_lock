@@ -34,7 +34,7 @@ function _attempt_lock() {
 	printf "%s\n" "$@" >> "$lockfile.$expiry"
 	while ! ln "$lockfile.$expiry" "$lockfile" 2>/dev/null; do
 		local current_expiry
-		current_expiry="$(tail -n1 "$lockfile" 2>/dev/null)"
+		current_expiry="$(head -n2 "$lockfile" 2>/dev/null | tail -n1)"
 		if [[ $? != 0 ]]; then
 			# this can happen when someone has manually clobbered the lock state
 			[[ $show_errors -eq 1 ]] && >&2 printf "Lock in partial state. May be safe to bust the lock: %s" "$lockfile"
@@ -64,7 +64,7 @@ function _renew() {
 	now="$(date +%s)"
 	let expiry="$now + $lease_term"
 	local current_expiry
-	current_expiry="$(tail -n 1 "$lockfile")"
+	current_expiry="$(head -n2 "$lockfile" 2>/dev/null | tail -n1)"
 	printf "%s" "$$\n$expiry" > "$lockfile.$current_expiry"
 	mv "$lockfile.$current_expiry" "$lockfile.$expiry"
 
@@ -75,7 +75,7 @@ function _unlock() {
 	local lockfile="$1"
 
 	local current_expiry
-	current_expiry="$(tail -n 1 "$lockfile")"
+	current_expiry="$(head -n2 "$lockfile" 2>/dev/null | tail -n1)"
 	rm -f "$lockfile.$current_expiry"
 	rm -f "$lockfile"
 }
