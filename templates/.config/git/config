@@ -46,3 +46,8 @@
   rebase = true
 [transfer]
   fsckobjects = true
+[rerere]
+  enabled = true
+[fetch]
+  writeCommitGraph = true
+
