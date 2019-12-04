@@ -70,11 +70,13 @@ function explain {
 }
 
 function sshmux() {
+    current_user="${REMOTE_USER:-$USER}"
     # shellcheck disable=SC2029
-    ssh -t "$@" tmux -L "${REMOTE_USER:-$USER}" new -A -s "${REMOTE_USER:-$USER}"
+    ssh -t "$@" REMOTE_USER="${current_user}" tmux -L "${current_user}" new -A -s "${current_user}"
 }
 function moshmux() {
-    mosh "$@" -- tmux -L "${REMOTE_USER:-$USER}" new -A -s "${REMOTE_USER:-$USER}"
+    current_user="${REMOTE_USER:-$USER}"
+    mosh "$@" -- tmux -L "${current_user}" new -A -s "${current_user}"
 }
 alias mux='tmuxinator'
 alias va='$VISUAL ~/.bash_aliases'
