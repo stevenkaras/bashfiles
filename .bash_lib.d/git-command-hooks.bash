@@ -25,14 +25,7 @@ function git() {
     # Expand git aliases
     local _param_1="$1"
     local _expanded
-    _expanded="$( \
-        command git config --get-regexp alias | sed -e 's/^alias\.//' | while read -r _alias _git_cmd; do \
-            if [[ "$_alias" == "$_param_1" ]]; then \
-                printf "%s" "$_git_cmd"; \
-                break; \
-            fi; \
-        done \
-    )"
+    _expanded="$(command git config --get-regexp "^alias.${_param_1}\$" | sed -e 's/[^ ]* //')"
 
     local _exit_val
 
