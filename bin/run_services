@@ -46,8 +46,11 @@ function map_service() {
 		mailcatcher|mailc)
 			echo "mailcatcher=mailcatcher -f"
 			;;
+		*=*)
+			echo "$1"
+			;;
 		*)
-			echo "$1=$*"
+			echo "$(basename "$1")=$*"
 			;;
 	esac
 }
