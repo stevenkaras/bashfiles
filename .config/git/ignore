@@ -58,6 +58,8 @@ Thumbs.db
 .project/
 .pydevproject/
 .ropeproject/
+.stignore
+.stignore-patterns.txt
 
 # Temporary files #
 ###################
