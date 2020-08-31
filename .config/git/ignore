@@ -57,6 +57,7 @@ Thumbs.db
 .ipynb_checkpoints/
 .project/
 .pydevproject/
+.ropeproject/
 
 # Temporary files #
 ###################
