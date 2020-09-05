@@ -16,7 +16,7 @@ function toggle_remote() {
 		# test is nonportable, and makes rough assumption about port used by ssh for X forwarding, so avoid it for now.
 		# netstat -lnt 2>/dev/null | grep ':6010' >/dev/null && export DISPLAY=localhost:10.0
 		export DISPLAY=localhost:10.0
-		export VISUAL="vi"
+		export VISUAL="nano"
 	}
 
 	local desired=""
