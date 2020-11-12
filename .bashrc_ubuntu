@@ -26,3 +26,12 @@ function sizeof() {
 	local file="$1"
 	du -sh "$file" | sort -r -h | head -10
 }
+
+function clipboard() {
+	# determine which direction we're flowing: in or out
+	if [[ -t 0 ]]; then
+		xclip -out -selection clipboard
+	else
+		xclip -selection clipboard
+	fi
+}
