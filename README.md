@@ -8,7 +8,7 @@ Strictly speaking, there's a lot more than just bash here, but the rest is share
 ## Bash-related features
 
 * Prompt
-  * Git/SVN integration with the prompt (SVN is historical, and unmaintained)
+  * Git integration with the prompt
   * Infinite bash history
   * Colors!
   * Automatic display of hostname if remotely connected

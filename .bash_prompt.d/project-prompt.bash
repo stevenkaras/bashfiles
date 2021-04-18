@@ -44,27 +44,21 @@ function project_root() {
 
   local gitroot
   gitroot="$(git rev-parse --show-toplevel 2>/dev/null)"
-  if [[ ! -z "$gitroot" ]]; then
+  if [[ -n "$gitroot" ]]; then
     result="$(__project_resolve_symlinks "$gitroot" "$PWD")"
-  # else
-    # disabled because I don't use SVN, and it creates a ton of extra process calls
-    # local svnroot=$(__transcend_root .svn)
-    # if [ ! -z "$svnroot" ]; then
-    #   result=$svnroot
-    # fi
   fi
 
   if [[ "$result" = "." ]]; then
     result="$PWD"
   fi
 
-  if [[ ! -z "$result" ]]; then
+  if [[ -n "$result" ]]; then
     printf "%s" "$result"
   fi
 }
 
 function project_ps1() {
-  if [[ ! -z "$PROJECT_NAME" ]]; then
+  if [[ -n "$PROJECT_NAME" ]]; then
     printf "%s" "[${PROJECT_NAME}]${PROJECT_PATH}"
   else
     if [[ "$PWD" == "$HOME" ]]; then

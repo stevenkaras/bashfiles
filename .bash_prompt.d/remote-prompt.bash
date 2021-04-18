@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # show the user and hostname if we're running on a remote server
 
 # conditionally show the hostname if we're running in an ssh connection
