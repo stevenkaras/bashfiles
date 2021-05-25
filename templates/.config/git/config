@@ -50,4 +50,8 @@
   enabled = true
 [fetch]
   writeCommitGraph = true
-
+[commit]
+  gpgsign = true
+[tag]
+  forceSignAnnotated = true
+  gpgsign = true
