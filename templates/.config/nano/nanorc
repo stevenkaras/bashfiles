@@ -1,0 +1,4 @@
+set autoindent
+extendsyntax sh linter dash -n
+extendsyntax go formatter gofmt -w
+set stateflags
