@@ -124,12 +124,17 @@ function do_install() {
 	[[ ! -e "$HOME/.gitignore_global" && "$(git config --global core.excludesfile)" == "~/.gitignore_global" ]] && git config --global --unset core.excludesfile
 
 	# symlink XDG configs
-	for config_folder in "$ROOTDIR/.config"/*; do
-		mkdir -p "$XDG_CONFIG_HOME/$(basename "$config_folder")"
-		remove_broken_symlinks "$XDG_CONFIG_HOME/$(basename "$config_folder")"
-		for config_file in "$config_folder"/*; do
-			ln -s -n "$config_file" "$XDG_CONFIG_HOME/$(basename "$config_folder")/$(basename "$config_file")" 2>/dev/null
-		done
+	remove_broken_symlinks "$XDG_CONFIG_HOME"
+	for config_entry in "$ROOTDIR/.config"/*; do
+		if [[ -d "$config_entry" ]]; then
+			mkdir -p "$XDG_CONFIG_HOME/$(basename "$config_entry")"
+			remove_broken_symlinks "$XDG_CONFIG_HOME/$(basename "$config_entry")"
+			for config_file in "$config_entry"/*; do
+				ln -s -n "$config_file" "$XDG_CONFIG_HOME/$(basename "$config_entry")/$(basename "$config_file")" 2>/dev/null
+			done
+		elif [[ -f "$config_entry" ]]; then
+			ln -s -n "$config_entry" "$XDG_CONFIG_HOME/$(basename "$config_entry")" 2>/dev/null
+		fi
 	done
 	ln -s -n "$XDG_CONFIG_HOME" "$ROOTDIR/.config-real" 2>/dev/null # convenience symlink
 
