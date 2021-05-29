@@ -1,3 +1,6 @@
+include /usr/local/share/nano*/*.nanorc
+include /usr/share/nano*/*.nanorc
+
 set autoindent
 extendsyntax sh linter dash -n
 extendsyntax go formatter gofmt -w
