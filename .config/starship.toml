@@ -1,8 +1,11 @@
 [time]
 disabled = false
-format="[$time]($style) "
-time_format="(%F %T)"
+format = "[$time]($style) "
+time_format = "(%F %T)"
 
 [status]
 disabled = false
 format = "[\\[$status\\]]($style) "
+
+[terraform]
+format = "via [$symbol$version]($style) "
