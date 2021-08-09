@@ -11,6 +11,8 @@ set show-all-if-unmodified On
 set visible-stats On
 
 # iTerm2 send nonstandard modified arrow keys, so support their defaults
+"\e[1;3D": backward-word
+"\e[1;3C": forward-word
 "\e[1;5D": backward-word
 "\e[1;5C": forward-word
 "\e[1;9D": backward-word
