@@ -69,6 +69,10 @@ function explain {
     open "$url"
 }
 
+muxmux () {
+    current_user="${REMOTE_USER:-$USER}"
+    tmux -L "${current_user}" new -A -s "${current_user}"
+}
 function sshmux() {
     current_user="${REMOTE_USER:-$USER}"
     # shellcheck disable=SC2029
