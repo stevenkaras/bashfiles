@@ -9,3 +9,6 @@ format = "[\\[$status\\]]($style) "
 
 [terraform]
 format = "via [$symbol$version]($style) "
+
+[localip]
+disabled = true
