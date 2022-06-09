@@ -55,5 +55,7 @@
 [tag]
   forceSignAnnotated = true
   gpgsign = true
+[init]
+  defaultBranch = main
 [diff]
   algorithm = histogram
