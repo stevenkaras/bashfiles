@@ -144,11 +144,22 @@ function do_install() {
 	for config_folder in "$ROOTDIR/templates/.config"/*; do
 		mkdir -p "$XDG_CONFIG_HOME/$(basename "$config_folder")"
 		for config_file in "$config_folder"/*; do
+			# Skip nanorc since it is generated dynamically below
+			if [[ "$(basename "$config_folder")" == "nano" && "$(basename "$config_file")" == "nanorc" ]]; then
+				continue
+			fi
 			if [[ ! -e "$XDG_CONFIG_HOME/$(basename "$config_folder")/$(basename "$config_file")" ]]; then
 				cp "$config_file" "$XDG_CONFIG_HOME/$(basename "$config_folder")/$(basename "$config_file")"
 			fi
 		done
 	done
+
+	# Special handling for nano: dynamically generate the configuration file using generate_nanorc
+	if [[ -x "$ROOTDIR/bin/generate_nanorc" ]]; then
+		mkdir -p "$XDG_CONFIG_HOME/nano"
+		"$ROOTDIR/bin/generate_nanorc" > "$XDG_CONFIG_HOME/nano/nanorc"
+	fi
+
 
 	# symlink the local profile files into the repo for convenience
 	[[ -f "$HOME/.profile" ]] && ln -s -n "$HOME/.profile" "$ROOTDIR/.profile" 2>/dev/null
