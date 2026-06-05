@@ -10,6 +10,10 @@ set show-all-if-ambiguous On
 set show-all-if-unmodified On
 set visible-stats On
 
+# Some useful interactive features
+set blink-matching-paren on
+set colored-completion-prefix on
+
 # iTerm2 send nonstandard modified arrow keys, so support their defaults
 "\e[1;3D": backward-word
 "\e[1;3C": forward-word
